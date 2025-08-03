@@ -668,3 +668,94 @@ body {
         box-shadow: none !important;
     }
 }
+/* Dropdown Z-Index Fixes */
+.dropdown-menu {
+    z-index: 1050 !important;
+    position: absolute !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.dropdown-toggle {
+    position: relative;
+    z-index: 1;
+}
+
+.card .dropdown,
+.post-card .dropdown {
+    position: relative;
+    z-index: 10;
+}
+
+.card .dropdown-menu,
+.post-card .dropdown-menu {
+    z-index: 1060 !important;
+}
+
+.table .dropdown {
+    position: relative;
+    z-index: 10;
+}
+
+.table .dropdown-menu {
+    z-index: 1055 !important;
+}
+
+.navbar .dropdown-menu {
+    z-index: 1030 !important;
+}
+
+.sidebar .dropdown-menu {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1070 !important;
+}
+
+.modal-backdrop {
+    z-index: 1060 !important;
+}
+
+.card,
+.post-card,
+.settings-card {
+    overflow: visible !important;
+}
+
+.main-content .card .dropdown-menu {
+    z-index: 1055 !important;
+}
+
+.container .post-card .dropdown-menu {
+    z-index: 1055 !important;
+    right: 0;
+    left: auto;
+}
+
+.premium-overlay .dropdown-menu {
+    z-index: 1070 !important;
+}
+
+.table-responsive .dropdown-menu {
+    z-index: 1055 !important;
+}
+
+/* Print Styles */
+@media print {
+    .navbar,
+    .btn,
+    .modal,
+    .loading-overlay {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .card {
+        border: 1px solid black !important;
+        box-shadow: none !important;
+    }
+}

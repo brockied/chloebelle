@@ -112,3 +112,25 @@ CREATE PROCEDURE Proce...' at line 1
 DELIMITER... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
 
 DELIMITER' at line 1
+[03-Aug-2025 20:04:48 UTC] Homepage Debug: {"all_posts":9,"featured_posts_in_db":"3","published_posts":"9"}
+[03-Aug-2025 20:04:48 UTC] Featured Posts Found: 3
+[03-Aug-2025 20:04:55 UTC] Homepage Debug: {"all_posts":9,"featured_posts_in_db":"3","published_posts":"9"}
+[03-Aug-2025 20:04:55 UTC] Featured Posts Found: 3
+[03-Aug-2025 20:06:43 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:06:46 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:07:06 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:09:06 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:08 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:19 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:21 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622

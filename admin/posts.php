@@ -1,6 +1,6 @@
 <?php
 /**
- * Post Management Page for Chloe Belle Admin - FIXED VERSION
+ * Post Management Page for Chloe Belle Admin - BETTER ACTION MENU VERSION
  */
 
 session_start();
@@ -83,7 +83,7 @@ if ($_POST) {
     }
 }
 
-// Get posts with pagination - FIXED VERSION
+// Get posts with pagination
 $page = max(1, (int)($_GET['page'] ?? 1));
 $postsPerPage = 10;
 $offset = ($page - 1) * $postsPerPage;
@@ -124,7 +124,7 @@ try {
     $countStmt->execute($params);
     $totalPosts = $countStmt->fetchColumn();
 
-    // Get posts - Fixed to avoid parameter binding issues
+    // Get posts
     $sql = "
         SELECT p.*, u.username, u.role as user_role
         FROM posts p
@@ -141,6 +141,7 @@ try {
     $totalPages = ceil($totalPosts / $postsPerPage);
 
 } catch (Exception $e) {
+    error_log("Posts query error: " . $e->getMessage());
     $error = "Database error: " . $e->getMessage();
     $posts = [];
     $totalPages = 0;
@@ -198,10 +199,16 @@ try {
         
         .post-card {
             transition: transform 0.2s;
+            position: relative;
         }
         
         .post-card:hover {
             transform: translateY(-2px);
+        }
+        
+        .post-card:hover .action-buttons {
+            opacity: 1;
+            transform: translateX(0);
         }
         
         .premium-badge {
@@ -210,6 +217,91 @@ try {
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 0.7rem;
+        }
+
+        /* Better Action Menu - Slide out buttons */
+        .action-buttons {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+        }
+
+        .action-btn.view { color: #007bff; }
+        .action-btn.edit { color: #28a745; }
+        .action-btn.unpublish { color: #ffc107; }
+        .action-btn.delete { color: #dc3545; }
+
+        .action-btn:hover.view { background: #007bff; color: white; }
+        .action-btn:hover.edit { background: #28a745; color: white; }
+        .action-btn:hover.unpublish { background: #ffc107; color: white; }
+        .action-btn:hover.delete { background: #dc3545; color: white; }
+
+        /* Action panel alternative */
+        .action-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-panel.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-toggle {
+            background: none;
+            border: none;
+            color: #6c757d;
+            font-size: 1.2rem;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .action-toggle:hover {
+            background: rgba(108, 92, 231, 0.1);
+            color: var(--primary-color);
         }
         
         @media (max-width: 768px) {
@@ -224,6 +316,15 @@ try {
             
             .main-content {
                 margin-left: 0;
+            }
+
+            .action-buttons {
+                opacity: 1;
+                transform: translateX(0);
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                margin-top: 10px;
             }
         }
     </style>
@@ -253,6 +354,16 @@ try {
             <li class="nav-item">
                 <a class="nav-link active" href="posts.php">
                     <i class="fas fa-edit me-2"></i>Posts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="media.php">
+                    <i class="fas fa-images me-2"></i>Media
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="roles.php">
+                    <i class="fas fa-user-tag me-2"></i>Roles
                 </a>
             </li>
             <?php if ($_SESSION['role'] === 'admin'): ?>
@@ -351,9 +462,46 @@ try {
                 <?php foreach ($posts as $post): ?>
                 <div class="col-lg-6 mb-4">
                     <div class="card post-card h-100">
+                        <!-- Hover Action Buttons -->
+                        <div class="action-buttons">
+                            <a href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank" 
+                               class="action-btn view" title="View Post">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            
+                            <?php if ($post['status'] === 'draft'): ?>
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="action" value="update_status">
+                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                    <input type="hidden" name="status" value="published">
+                                    <button type="submit" class="action-btn edit" title="Publish Post">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <form method="POST" class="d-inline">
+                                    <input type="hidden" name="action" value="update_status">
+                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                    <input type="hidden" name="status" value="draft">
+                                    <button type="submit" class="action-btn unpublish" title="Unpublish Post">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                            
+                            <form method="POST" class="d-inline">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                <button type="submit" class="action-btn delete" title="Delete Post"
+                                        onclick="return confirm('Delete this post permanently?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
+                                <div class="flex-grow-1">
                                     <h6 class="card-title mb-1">
                                         <?= $post['title'] ? htmlspecialchars($post['title']) : 'Untitled Post' ?>
                                         <?php if ($post['featured']): ?>
@@ -405,55 +553,48 @@ try {
                                     <?= date('M j, Y g:i A', strtotime($post['created_at'])) ?>
                                 </small>
                                 
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        Actions
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li>
-                                            <a class="dropdown-item" href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank">
-                                                <i class="fas fa-eye me-2"></i>View Post
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        
-                                        <?php if ($post['status'] === 'draft'): ?>
-                                            <li>
-                                                <form method="POST" class="d-inline">
-                                                    <input type="hidden" name="action" value="update_status">
-                                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                    <input type="hidden" name="status" value="published">
-                                                    <button type="submit" class="dropdown-item text-success">
-                                                        <i class="fas fa-check me-2"></i>Publish
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        <?php else: ?>
-                                            <li>
-                                                <form method="POST" class="d-inline">
-                                                    <input type="hidden" name="action" value="update_status">
-                                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                    <input type="hidden" name="status" value="draft">
-                                                    <button type="submit" class="dropdown-item text-warning">
-                                                        <i class="fas fa-edit me-2"></i>Unpublish
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        <?php endif; ?>
-                                        
-                                        <li><hr class="dropdown-divider"></li>
-                                        
-                                        <li>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                                <button type="submit" class="dropdown-item text-danger" 
-                                                        onclick="return confirm('Delete this post permanently?')">
-                                                    <i class="fas fa-trash me-2"></i>Delete
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
+                                <!-- Action Panel Toggle (Alternative to hover buttons) -->
+                                <button class="action-toggle d-md-none" onclick="toggleActionPanel(<?= $post['id'] ?>)">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                            </div>
+
+                            <!-- Mobile Action Panel -->
+                            <div class="action-panel" id="actionPanel<?= $post['id'] ?>">
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <a href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    
+                                    <?php if ($post['status'] === 'draft'): ?>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                            <input type="hidden" name="status" value="published">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-check"></i> Publish
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="action" value="update_status">
+                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                            <input type="hidden" name="status" value="draft">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i> Draft
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Delete this post permanently?')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -566,7 +707,31 @@ try {
             }
         });
 
-        console.log('📝 Post Management loaded (FIXED VERSION)');
+        // Toggle action panel for mobile
+        function toggleActionPanel(postId) {
+            const panel = document.getElementById('actionPanel' + postId);
+            
+            // Close all other panels first
+            document.querySelectorAll('.action-panel').forEach(p => {
+                if (p.id !== 'actionPanel' + postId) {
+                    p.classList.remove('show');
+                }
+            });
+            
+            // Toggle current panel
+            panel.classList.toggle('show');
+        }
+
+        // Close action panels when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.action-toggle') && !e.target.closest('.action-panel')) {
+                document.querySelectorAll('.action-panel').forEach(panel => {
+                    panel.classList.remove('show');
+                });
+            }
+        });
+
+        console.log('📝 Post Management loaded with better action menu');
         console.log('📊 Total posts: <?= $totalPosts ?>');
     </script>
 </body>

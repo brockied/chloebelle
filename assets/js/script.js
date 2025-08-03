@@ -656,3 +656,121 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+// Dropdown Z-Index Fix JavaScript
+// Add this to any page with dropdown issues
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Fix dropdown positioning and z-index issues
+    function fixDropdowns() {
+        const dropdowns = document.querySelectorAll('.dropdown');
+        
+        dropdowns.forEach(dropdown => {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            if (toggle && menu) {
+                // Ensure proper z-index
+                dropdown.style.position = 'relative';
+                dropdown.style.zIndex = '10';
+                menu.style.zIndex = '1055';
+                menu.style.position = 'absolute';
+                
+                // Fix positioning for dropdowns in cards
+                const card = dropdown.closest('.card, .post-card');
+                if (card) {
+                    card.style.overflow = 'visible';
+                    menu.style.zIndex = '1060';
+                }
+                
+                // Fix positioning for dropdowns in tables
+                const table = dropdown.closest('.table');
+                if (table) {
+                    const tableResponsive = table.closest('.table-responsive');
+                    if (tableResponsive) {
+                        tableResponsive.style.overflow = 'visible';
+                    }
+                }
+            }
+        });
+    }
+    
+    // Fix dropdowns on page load
+    fixDropdowns();
+    
+    // Re-fix dropdowns when new content is added (for dynamic content)
+    const observer = new MutationObserver(function(mutations) {
+        let shouldFix = false;
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1 && 
+                        (node.classList.contains('dropdown') || 
+                         node.querySelector('.dropdown'))) {
+                        shouldFix = true;
+                    }
+                });
+            }
+        });
+        
+        if (shouldFix) {
+            setTimeout(fixDropdowns, 10);
+        }
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Handle dropdown show events
+    document.addEventListener('show.bs.dropdown', function(event) {
+        const dropdown = event.target.closest('.dropdown');
+        const menu = dropdown.querySelector('.dropdown-menu');
+        
+        if (menu) {
+            // Ensure the dropdown menu is visible
+            menu.style.zIndex = '1055';
+            menu.style.position = 'absolute';
+            
+            // Special handling for dropdowns in specific containers
+            const card = dropdown.closest('.card, .post-card');
+            if (card) {
+                menu.style.zIndex = '1060';
+            }
+            
+            const table = dropdown.closest('.table');
+            if (table) {
+                menu.style.zIndex = '1055';
+            }
+            
+            // Position the dropdown menu properly
+            const rect = event.target.getBoundingClientRect();
+            const menuRect = menu.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            
+            // If dropdown would go off screen, show it above the button
+            if (rect.bottom + menuRect.height > viewportHeight) {
+                menu.classList.add('dropdown-menu-up');
+            } else {
+                menu.classList.remove('dropdown-menu-up');
+            }
+        }
+    });
+    
+    console.log('✅ Dropdown z-index fixes applied');
+});
+
+// Additional CSS for dropdown positioning
+const style = document.createElement('style');
+style.textContent = `
+    .dropdown-menu-up {
+        transform: translateY(-100%) translateY(-0.5rem) !important;
+        top: auto !important;
+        bottom: 100% !important;
+    }
+    
+    .dropdown-menu {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+`;
+document.head.appendChild(style);

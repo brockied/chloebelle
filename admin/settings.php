@@ -243,6 +243,16 @@ function getSetting($key, $default = '') {
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="media.php">
+                    <i class="fas fa-images me-2"></i>Media
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="roles.php">
+                    <i class="fas fa-user-tag me-2"></i>Roles
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="subscriptions.php">
                     <i class="fas fa-credit-card me-2"></i>Subscriptions
                 </a>

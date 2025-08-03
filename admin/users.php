@@ -1,6 +1,6 @@
 <?php
 /**
- * User Management Page for Chloe Belle Admin
+ * User Management Page for Chloe Belle Admin - FIXED VERSION
  */
 
 session_start();
@@ -67,7 +67,7 @@ if ($_POST) {
     }
 }
 
-// Get users with pagination
+// Get users with pagination - FIXED VERSION
 $page = max(1, (int)($_GET['page'] ?? 1));
 $usersPerPage = 20;
 $offset = ($page - 1) * $usersPerPage;
@@ -93,25 +93,29 @@ try {
     }
 
     // Get total count
-    $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users $searchQuery");
+    $countSql = "SELECT COUNT(*) FROM users $searchQuery";
+    $countStmt = $pdo->prepare($countSql);
     $countStmt->execute($searchParams);
     $totalUsers = $countStmt->fetchColumn();
 
-    // Get users
-    $stmt = $pdo->prepare("
+    // Get users - FIXED: Use proper parameter binding for LIMIT and OFFSET
+    $sql = "
         SELECT id, username, email, role, status, subscription_status, 
                subscription_expires, last_login, created_at
         FROM users 
         $searchQuery
         ORDER BY created_at DESC 
-        LIMIT ? OFFSET ?
-    ");
-    $stmt->execute(array_merge($searchParams, [$usersPerPage, $offset]));
+        LIMIT $usersPerPage OFFSET $offset
+    ";
+    
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($searchParams);
     $users = $stmt->fetchAll();
 
     $totalPages = ceil($totalUsers / $usersPerPage);
 
 } catch (Exception $e) {
+    error_log("Admin users query error: " . $e->getMessage());
     $error = "Database error: " . $e->getMessage();
     $users = [];
     $totalPages = 0;
@@ -214,6 +218,16 @@ try {
             <li class="nav-item">
                 <a class="nav-link" href="posts.php">
                     <i class="fas fa-edit me-2"></i>Posts
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="media.php">
+                    <i class="fas fa-images me-2"></i>Media
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="roles.php">
+                    <i class="fas fa-user-tag me-2"></i>Roles
                 </a>
             </li>
             <li class="nav-item">
@@ -504,7 +518,7 @@ try {
             document.querySelector('[name="new_role"]').value = currentRole;
         });
 
-        console.log('👥 User Management loaded');
+        console.log('👥 User Management loaded (FIXED VERSION)');
         console.log('📊 Total users: <?= $totalUsers ?>');
     </script>
 </body>
