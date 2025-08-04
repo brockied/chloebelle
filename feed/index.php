@@ -1,11 +1,12 @@
 <?php
 /**
- * Main Feed Page for Chloe Belle Website - Fixed Version with Comments
- * Displays posts with subscription-based access control and user avatars
+ * Main Feed Page for Chloe Belle Website - Fixed Version with Working Comments
+ * Displays posts with working comments, likes, and media upload
  */
 
 session_start();
 require_once '../config.php';
+require_once '../includes/functions.php';
 
 // Check if user is logged in
 $isLoggedIn = isset($_SESSION['user_id']);
@@ -52,19 +53,65 @@ if ($_POST && isset($_POST['create_post']) && in_array($currentUser['role'], ['a
             throw new Exception('Content is required');
         }
         
+        // Handle media upload
+        $mediaUrl = null;
+        $mediaType = 'none';
+        $uploadPath = '../uploads/posts/';
+        
+        // Create upload directory if it doesn't exist
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+        
+        // Check for photo upload
+        if (isset($_FILES['photo_upload']) && $_FILES['photo_upload']['error'] === UPLOAD_ERR_OK) {
+            $allowedImageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $uploadResult = uploadFile($_FILES['photo_upload'], $uploadPath, $allowedImageTypes, 10485760); // 10MB
+            
+            if ($uploadResult['success']) {
+                $mediaUrl = 'uploads/posts/' . basename($uploadResult['path']);
+                $mediaType = 'image';
+            } else {
+                throw new Exception('Image upload failed: ' . implode(', ', $uploadResult['errors']));
+            }
+        }
+        // Check for video upload
+        elseif (isset($_FILES['video_upload']) && $_FILES['video_upload']['error'] === UPLOAD_ERR_OK) {
+            $allowedVideoTypes = ['mp4', 'mov', 'avi', 'wmv'];
+            $uploadResult = uploadFile($_FILES['video_upload'], $uploadPath, $allowedVideoTypes, 52428800); // 50MB
+            
+            if ($uploadResult['success']) {
+                $mediaUrl = 'uploads/posts/' . basename($uploadResult['path']);
+                $mediaType = 'video';
+            } else {
+                throw new Exception('Video upload failed: ' . implode(', ', $uploadResult['errors']));
+            }
+        }
+        
+        // Insert post into database
         $stmt = $pdo->prepare("
-            INSERT INTO posts (user_id, title, content, is_premium, subscription_required, status, created_at)
-            VALUES (?, ?, ?, ?, ?, 'published', NOW())
+            INSERT INTO posts (user_id, title, content, media_type, media_url, is_premium, subscription_required, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'published', NOW())
         ");
-        $stmt->execute([$currentUser['id'], $title, $content, $isPremium, $subscriptionRequired]);
+        $stmt->execute([$currentUser['id'], $title, $content, $mediaType, $mediaUrl, $isPremium, $subscriptionRequired]);
         
         $message = "Post created successfully!";
         $messageType = 'success';
+        
+        // Redirect to prevent resubmission
+        header("Location: index.php?success=1");
+        exit;
         
     } catch (Exception $e) {
         $message = 'Error: ' . $e->getMessage();
         $messageType = 'danger';
     }
+}
+
+// Check for success message from redirect
+if (isset($_GET['success'])) {
+    $message = "Post created successfully!";
+    $messageType = 'success';
 }
 
 // Get posts with pagination
@@ -73,29 +120,30 @@ $postsPerPage = 10;
 $offset = ($page - 1) * $postsPerPage;
 
 try {
-    // Get total post count - Fixed SQL
+    // Get total post count
     $totalPosts = $pdo->query("
-        SELECT COUNT(*) FROM posts p 
-        JOIN users u ON p.user_id = u.id 
-        WHERE p.status = 'published'
+        SELECT COUNT(*) FROM posts 
+        WHERE status = 'published'
     ")->fetchColumn();
 
-    // Get posts with user avatar info - Fixed SQL with proper parameter binding
+    // Get posts with user info and engagement data
     $stmt = $pdo->prepare("
         SELECT 
             p.*,
             u.username,
             u.avatar,
             u.role,
-            (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as like_count,
+            COALESCE(p.likes_count, 0) as like_count,
+            COALESCE(p.comments_count, 0) as comments_count,
+            COALESCE(p.views, 0) as views,
             (SELECT COUNT(*) FROM likes WHERE post_id = p.id AND user_id = ?) as user_liked
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.status = 'published'
         ORDER BY p.created_at DESC
-        LIMIT $postsPerPage OFFSET $offset
+        LIMIT ? OFFSET ?
     ");
-    $stmt->execute([$currentUser['id']]);
+    $stmt->execute([$currentUser['id'], $postsPerPage, $offset]);
     $posts = $stmt->fetchAll();
 
     $totalPages = ceil($totalPosts / $postsPerPage);
@@ -103,55 +151,101 @@ try {
 } catch (Exception $e) {
     error_log("Feed query error: " . $e->getMessage());
     $posts = [];
-    $totalPages = 0;
+    $totalPages = 1;
 }
 
-// Get comments for posts
-$postIds = array_column($posts, 'id');
+// Get comments for all posts on this page
 $comments = [];
-
-if (!empty($postIds)) {
-    $placeholders = str_repeat('?,', count($postIds) - 1) . '?';
-    $stmt = $pdo->prepare("
-        SELECT 
-            c.*,
-            u.username,
-            u.avatar,
-            u.role,
-            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as like_count,
-            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND user_id = ?) as user_liked
-        FROM comments c
-        JOIN users u ON c.user_id = u.id
-        WHERE c.post_id IN ($placeholders) AND c.is_deleted = 0
-        ORDER BY c.created_at ASC
-    ");
-    
-    $params = array_merge([$currentUser['id']], $postIds);
-    $stmt->execute($params);
-    $allComments = $stmt->fetchAll();
-    
-    // Group comments by post_id
-    foreach ($allComments as $comment) {
-        $comments[$comment['post_id']][] = $comment;
+if (!empty($posts)) {
+    $postIds = array_column($posts, 'id');
+    if (!empty($postIds)) {
+        $placeholders = str_repeat('?,', count($postIds) - 1) . '?';
+        
+        try {
+            $stmt = $pdo->prepare("
+                SELECT 
+                    c.*,
+                    u.username,
+                    u.avatar,
+                    u.role,
+                    (SELECT COUNT(*) FROM likes WHERE comment_id = c.id) as like_count,
+                    (SELECT COUNT(*) FROM likes WHERE comment_id = c.id AND user_id = ?) as user_liked
+                FROM comments c
+                JOIN users u ON c.user_id = u.id
+                WHERE c.post_id IN ($placeholders) AND (c.status = 'approved' OR c.status IS NULL)
+                ORDER BY c.created_at ASC
+            ");
+            
+            $params = array_merge([$currentUser['id']], $postIds);
+            $stmt->execute($params);
+            $allComments = $stmt->fetchAll();
+            
+            // Group comments by post_id
+            foreach ($allComments as $comment) {
+                $comments[$comment['post_id']][] = $comment;
+            }
+            
+        } catch (Exception $e) {
+            error_log("Comments query error: " . $e->getMessage());
+        }
     }
 }
 
-// Helper function to check if user can comment
-function canCommentOnPost($post, $user) {
-    if (!$user) return false;
-    if ($post['is_premium']) {
-        return hasAccessToPost($post, $user);
+// Get user's subscription status
+$hasSubscription = in_array($currentUser['subscription_status'], ['monthly', 'yearly', 'lifetime']);
+$subscriptionExpires = $currentUser['subscription_expires'] ? new DateTime($currentUser['subscription_expires']) : null;
+$subscriptionActive = $hasSubscription && (!$subscriptionExpires || $subscriptionExpires > new DateTime());
+
+// Track free post views for non-subscribers
+if (!$subscriptionActive && !isset($_SESSION['free_posts_viewed'])) {
+    $_SESSION['free_posts_viewed'] = 0;
+}
+
+// Helper function to check post access
+function hasPostAccess($post, $user, $subscriptionActive) {
+    // Admins and Chloe can see everything
+    if (in_array($user['role'], ['admin', 'chloe'])) {
+        return true;
     }
+    
+    // Non-premium posts are always accessible
+    if (!$post['is_premium']) {
+        return true;
+    }
+    
+    // Premium posts require active subscription
+    if (!$subscriptionActive) {
+        return false;
+    }
+    
+    // Check subscription level requirements
+    $userSubscription = $user['subscription_status'];
+    $requiredSubscription = $post['subscription_required'];
+    
+    if ($requiredSubscription === 'yearly' && $userSubscription === 'monthly') {
+        return false;
+    }
+    
     return true;
 }
 
-// Helper function to get avatar URL with fallback
-function getAvatarUrl($avatar, $useThumb = true) {
+// Helper function to check if user can comment
+function canCommentOnPost($post, $user, $subscriptionActive) {
+    // Must be logged in
+    if (!$user) return false;
+    
+    // Must have access to the post
+    return hasPostAccess($post, $user, $subscriptionActive);
+}
+
+// Get avatar URL with fallback
+function getAvatarUrl($avatar, $useThumb = false) {
     if (!$avatar) {
         return '../assets/images/default-avatar.jpg';
     }
     
-    $avatarPath = $useThumb ? '../uploads/avatars/thumb_' . $avatar : '../uploads/avatars/' . $avatar;
+    $avatarPath = $useThumb ? 
+        '../uploads/avatars/thumb_' . $avatar : '../uploads/avatars/' . $avatar;
     
     // Check if thumbnail exists, fallback to original
     if ($useThumb && !file_exists($avatarPath)) {
@@ -159,32 +253,6 @@ function getAvatarUrl($avatar, $useThumb = true) {
     }
     
     return file_exists($avatarPath) ? $avatarPath : '../assets/images/default-avatar.jpg';
-}
-
-// Helper function to check if user has access to premium content
-function hasAccessToPost($post, $user) {
-    if (!$post['is_premium']) {
-        return true; // Free post
-    }
-    
-    if (!$user) {
-        return false; // Not logged in
-    }
-    
-    // Check subscription status
-    $requiredLevel = $post['subscription_required'];
-    $userLevel = $user['subscription_status'];
-    
-    if ($userLevel === 'none') {
-        return false;
-    }
-    
-    // Check subscription hierarchy
-    $levels = ['monthly' => 1, 'yearly' => 2, 'lifetime' => 3];
-    $userLevelValue = $levels[$userLevel] ?? 0;
-    $requiredLevelValue = $levels[$requiredLevel] ?? 1;
-    
-    return $userLevelValue >= $requiredLevelValue;
 }
 
 function timeAgo($datetime) {
@@ -199,57 +267,82 @@ function timeAgo($datetime) {
     return floor($time / 31536000) . 'y ago';
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feed - Chloe Belle</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
+    
     <style>
-        :root {
-            --primary-color: #6c5ce7;
-            --accent-color: #fd79a8;
-            --gradient-primary: linear-gradient(135deg, #6c5ce7, #a29bfe);
-        }
-        
         body {
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8e5ff 100%);
-            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding-top: 80px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .navbar {
+            background: rgba(108, 92, 231, 0.95) !important;
             backdrop-filter: blur(10px);
-            background: rgba(108, 92, 231, 0.9) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .post-card, .create-post-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+        .current-user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .post-card,
+        .create-post-card {
+            background: white;
             border: none;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.1);
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            overflow: visible;
         }
         
-        .post-card:hover {
+        .post-card:hover,
+        .create-post-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 40px rgba(108, 92, 231, 0.2);
         }
         
-        .create-post-card {
-            border: 2px dashed var(--primary-color);
-            background: rgba(108, 92, 231, 0.05);
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e9ecef;
+        }
+        
+        .chloe-avatar {
+            border-color: #ff6b9d !important;
+            box-shadow: 0 0 15px rgba(255, 107, 157, 0.3);
+        }
+        
+        .admin-avatar {
+            border-color: #4ecdc4 !important;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
         }
         
         .premium-badge {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
             color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
             font-weight: 600;
         }
         
@@ -260,7 +353,6 @@ function timeAgo($datetime) {
         
         .premium-blur {
             filter: blur(10px);
-            transition: filter 0.3s ease;
         }
         
         .premium-lock {
@@ -268,99 +360,37 @@ function timeAgo($datetime) {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(108, 92, 231, 0.9);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
             text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
         }
         
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--primary-color);
-            transition: all 0.3s ease;
-        }
-        
-        .user-avatar:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-color);
-        }
-        
-        /* Special styling for Chloe Belle's avatar */
-        .chloe-avatar {
-            border: 3px solid var(--accent-color);
-            box-shadow: 0 0 15px rgba(253, 121, 168, 0.4);
-        }
-        
-        .admin-avatar {
-            border: 3px solid #e74c3c;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .like-btn {
+        .like-btn,
+        .comment-toggle {
             background: none;
             border: none;
             color: #6c757d;
             transition: all 0.3s ease;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
         }
         
         .like-btn:hover,
+        .comment-toggle:hover {
+            background: #f8f9fa;
+            color: #6c5ce7;
+        }
+        
         .like-btn.liked {
             color: #e74c3c;
-            transform: scale(1.1);
         }
         
-        .btn-primary {
-            background: var(--gradient-primary);
-            border: none;
-            border-radius: 25px;
-            padding: 10px 25px;
-            font-weight: 600;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
-        }
-        
-        .sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            position: sticky;
-            top: 100px;
-        }
-        
-        .current-user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-            margin-right: 8px;
-        }
-        
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
-        }
-        
-        /* Media sizing styles - Facebook-like */
         .post-media-container {
             margin: 15px 0;
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
         }
         
         .post-media-image {
@@ -384,199 +414,82 @@ function timeAgo($datetime) {
             outline: none;
         }
         
-        /* Multiple images grid */
-        .post-media-grid {
-            display: grid;
-            gap: 5px;
-            border-radius: 15px;
-            overflow: hidden;
-        }
-        
-        .post-media-grid.grid-2 {
-            grid-template-columns: 1fr 1fr;
-        }
-        
-        .post-media-grid.grid-3 {
-            grid-template-columns: 2fr 1fr;
-            grid-template-rows: 1fr 1fr;
-        }
-        
-        .post-media-grid.grid-3 img:first-child {
-            grid-row: span 2;
-        }
-        
-        .post-media-grid.grid-4 {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-        }
-        
-        .post-media-grid img {
-            width: 100%;
-            height: 250px;
+        /* File upload preview */
+        .file-preview {
+            max-width: 200px;
+            max-height: 200px;
             object-fit: cover;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 10px;
+            margin: 10px 0;
         }
         
-        .post-media-grid img:hover {
-            transform: scale(1.02);
-            filter: brightness(1.1);
+        .file-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9rem;
         }
         
-        /* Image modal styles */
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        
-        #imageModal .modal-content {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-        
-        #imageModal .modal-body {
-            position: relative;
-        }
-        
-        #imageModal .btn-close {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            opacity: 0.8;
-        }
-        
-        #imageModal .btn-close:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Comment System Styles */
+        /* Comments Section */
         .comments-section {
             border-top: 1px solid #e9ecef;
-            padding-top: 1rem;
-            margin-top: 1rem;
+            padding-top: 15px;
+            margin-top: 15px;
             display: none;
         }
-
+        
         .comments-section.show {
             display: block;
         }
-
-        .comment-form {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+        
+        .comment {
+            padding: 10px 0;
+            border-bottom: 1px solid #f8f9fa;
         }
-
-        .comment-item {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
+        
+        .comment:last-child {
+            border-bottom: none;
         }
-
-        .comment-item:hover {
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
+        
         .comment-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--primary-color);
         }
-
-        .comment-avatar.chloe-avatar {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 10px rgba(253, 121, 168, 0.3);
-        }
-
-        .comment-avatar.admin-avatar {
-            border-color: #e74c3c;
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
-        }
-
-        .comment-actions {
-            display: none;
-            gap: 0.5rem;
-        }
-
-        .comment-item:hover .comment-actions {
-            display: flex;
-        }
-
-        .btn-comment {
-            background: var(--primary-color);
-            border: none;
+        
+        .sidebar {
+            background: white;
             border-radius: 20px;
-            color: white;
-            padding: 8px 16px;
-            font-size: 0.9rem;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.1);
+            position: sticky;
+            top: 100px;
+        }
+        
+        /* Drag and drop styles */
+        .drag-over {
+            border: 2px dashed #6c5ce7 !important;
+            background: rgba(108, 92, 231, 0.1) !important;
+            transform: scale(1.02);
             transition: all 0.3s ease;
         }
-
-        .btn-comment:hover {
-            background: var(--accent-color);
-            transform: translateY(-1px);
-        }
-
-        .comment-toggle {
-            background: none;
-            border: none;
-            color: #6c757d;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .comment-toggle:hover {
-            color: var(--primary-color);
-        }
-
-        .comment-toggle.active {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        .comment-premium-lock {
-            background: rgba(108, 92, 231, 0.1);
-            border: 2px dashed var(--primary-color);
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-            margin: 1rem 0;
-        }
-
+        
         .loading-spinner {
-            display: none;
+            display: inline-block;
             width: 20px;
             height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid var(--primary-color);
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6c5ce7;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .comment-like-btn.liked {
-            color: #e74c3c;
         }
         
         @media (max-width: 768px) {
@@ -588,10 +501,6 @@ function timeAgo($datetime) {
             .post-media-image,
             .post-media-video {
                 max-height: 300px;
-            }
-            
-            .post-media-grid img {
-                height: 150px;
             }
         }
     </style>
@@ -664,9 +573,11 @@ function timeAgo($datetime) {
             <div class="col-lg-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Latest Posts</h2>
-                    <div class="d-flex align-items-center">
-                        <span class="text-muted me-3">Page <?= $page ?> of <?= max(1, $totalPages) ?></span>
-                    </div>
+                    <?php if ($totalPages > 1): ?>
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted me-3">Page <?= $page ?> of <?= $totalPages ?></span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <?php if ($message): ?>
@@ -698,8 +609,12 @@ function timeAgo($datetime) {
                                 </div>
                             </div>
                             
-                            <form method="POST">
+                            <form method="POST" enctype="multipart/form-data" id="createPostForm">
                                 <input type="hidden" name="create_post" value="1">
+                                
+                                <!-- Hidden file inputs -->
+                                <input type="file" id="photoUpload" name="photo_upload" accept="image/*" style="display: none;">
+                                <input type="file" id="videoUpload" name="video_upload" accept="video/*" style="display: none;">
                                 
                                 <div class="mb-3">
                                     <input type="text" class="form-control" name="title" placeholder="Post title (optional)">
@@ -707,6 +622,18 @@ function timeAgo($datetime) {
                                 
                                 <div class="mb-3">
                                     <textarea class="form-control" name="content" rows="3" placeholder="What's on your mind?" required></textarea>
+                                </div>
+                                
+                                <!-- File preview area -->
+                                <div id="filePreview" style="display: none;">
+                                    <div class="file-info">
+                                        <span id="fileName"></span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger float-end" onclick="clearFileSelection()">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                    <img id="imagePreview" class="file-preview" style="display: none;">
+                                    <video id="videoPreview" class="file-preview" style="display: none;" controls></video>
                                 </div>
                                 
                                 <div class="row mb-3">
@@ -730,10 +657,10 @@ function timeAgo($datetime) {
                                 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="document.getElementById('photoUpload').click()">
                                             <i class="fas fa-image me-1"></i>Photo
                                         </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('videoUpload').click()">
                                             <i class="fas fa-video me-1"></i>Video
                                         </button>
                                     </div>
@@ -746,6 +673,7 @@ function timeAgo($datetime) {
                     </div>
                 <?php endif; ?>
 
+                <!-- Posts Display -->
                 <?php if (empty($posts)): ?>
                     <div class="post-card">
                         <div class="card-body text-center py-5">
@@ -760,270 +688,217 @@ function timeAgo($datetime) {
                             </p>
                         </div>
                     </div>
-                <?php endif; ?>
-
-                <?php foreach ($posts as $post): ?>
-                    <?php $hasAccess = hasAccessToPost($post, $currentUser); ?>
-                    <div class="card post-card">
-                        <div class="card-body">
-                            <!-- Post Header -->
-                            <div class="d-flex align-items-center mb-3">
-                                <?php 
-                                $avatarClass = 'user-avatar';
-                                if ($post['role'] === 'chloe') {
-                                    $avatarClass .= ' chloe-avatar';
-                                } elseif ($post['role'] === 'admin') {
-                                    $avatarClass .= ' admin-avatar';
-                                }
-                                ?>
-                                <img src="<?= getAvatarUrl($post['avatar']) ?>" 
-                                     alt="<?= htmlspecialchars($post['username']) ?>" 
-                                     class="<?= $avatarClass ?> me-3">
-                                
-                                <div class="flex-grow-1">
-                                    <h6 class="mb-0">
-                                        <?= htmlspecialchars($post['username']) ?>
-                                        <?php if ($post['role'] === 'chloe'): ?>
-                                            <i class="fas fa-star text-warning ms-1" title="Chloe Belle"></i>
-                                        <?php elseif ($post['role'] === 'admin'): ?>
-                                            <i class="fas fa-shield-alt text-danger ms-1" title="Administrator"></i>
-                                        <?php endif; ?>
-                                    </h6>
-                                    <small class="text-muted"><?= timeAgo($post['created_at']) ?></small>
+                <?php else: ?>
+                    <?php foreach ($posts as $post): ?>
+                        <?php
+                        $hasAccess = hasPostAccess($post, $currentUser, $subscriptionActive);
+                        
+                        // For non-subscribers, limit free post access
+                        if (!$subscriptionActive && !in_array($currentUser['role'], ['admin', 'chloe'])) {
+                            if ($post['is_premium'] || $_SESSION['free_posts_viewed'] >= 3) {
+                                $hasAccess = false;
+                            } else {
+                                $_SESSION['free_posts_viewed']++;
+                            }
+                        }
+                        ?>
+                        
+                        <div class="post-card" data-post-id="<?= $post['id'] ?>">
+                            <div class="card-body">
+                                <!-- Post Header -->
+                                <div class="d-flex align-items-center mb-3">
+                                    <?php 
+                                    $posterAvatarClass = 'user-avatar';
+                                    if ($post['role'] === 'chloe') {
+                                        $posterAvatarClass .= ' chloe-avatar';
+                                    } elseif ($post['role'] === 'admin') {
+                                        $posterAvatarClass .= ' admin-avatar';
+                                    }
+                                    ?>
+                                    <img src="<?= getAvatarUrl($post['avatar']) ?>" 
+                                         alt="<?= htmlspecialchars($post['username']) ?>" 
+                                         class="<?= $posterAvatarClass ?> me-3">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center">
+                                            <h6 class="mb-0 me-2">
+                                                <?= htmlspecialchars($post['username']) ?>
+                                                <?php if ($post['role'] === 'chloe'): ?>
+                                                    <i class="fas fa-heart text-danger ms-1" title="Chloe Belle"></i>
+                                                <?php elseif ($post['role'] === 'admin'): ?>
+                                                    <i class="fas fa-shield-alt text-primary ms-1" title="Admin"></i>
+                                                <?php endif; ?>
+                                            </h6>
+                                            <?php if ($post['is_premium']): ?>
+                                                <span class="premium-badge">
+                                                    <i class="fas fa-crown me-1"></i>Premium
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            <?= timeAgo($post['created_at']) ?>
+                                        </small>
+                                    </div>
                                 </div>
-                                
-                                <?php if ($post['is_premium']): ?>
-                                    <span class="premium-badge">
-                                        <i class="fas fa-crown me-1"></i>Premium
-                                    </span>
+
+                                <!-- Post Title -->
+                                <?php if ($post['title']): ?>
+                                    <h5 class="card-title"><?= htmlspecialchars($post['title']) ?></h5>
                                 <?php endif; ?>
-                            </div>
 
-                            <!-- Post Title -->
-                            <?php if ($post['title']): ?>
-                                <h5 class="card-title"><?= htmlspecialchars($post['title']) ?></h5>
-                            <?php endif; ?>
-
-                            <!-- Post Content -->
-                            <div class="post-content <?= !$hasAccess && $post['is_premium'] ? 'premium-overlay' : '' ?>">
-                                <?php if ($hasAccess || !$post['is_premium']): ?>
-                                    <p class="card-text"><?= nl2br(htmlspecialchars($post['content'])) ?></p>
-                                <?php else: ?>
-                                    <div class="premium-blur">
-                                        <p class="card-text"><?= nl2br(htmlspecialchars(substr($post['content'], 0, 100))) ?>...</p>
-                                    </div>
-                                    <div class="premium-lock">
-                                        <i class="fas fa-lock fa-2x mb-2"></i>
-                                        <h6>Premium Content</h6>
-                                        <p class="mb-3">Subscribe to unlock this exclusive content</p>
-                                        <a href="../subscription/plans.php" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-crown me-1"></i>Subscribe Now
-                                        </a>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Post Media -->
-                            <?php if ($post['media_url'] && $hasAccess): ?>
-                                <div class="post-media-container">
-                                    <?php if ($post['media_type'] === 'image'): ?>
-                                        <img src="<?= htmlspecialchars($post['media_url']) ?>" 
-                                             class="post-media-image" 
-                                             alt="<?= htmlspecialchars($post['title'] ?: 'Post image') ?>"
-                                             loading="lazy">
-                                    <?php elseif ($post['media_type'] === 'video'): ?>
-                                        <video controls class="post-media-video" preload="metadata">
-                                            <source src="<?= htmlspecialchars($post['media_url']) ?>" type="video/mp4">
-                                            Your browser does not support the video tag.
-                                        </video>
-                                    <?php elseif ($post['media_type'] === 'gallery'): ?>
-                                        <!-- Future: Gallery support with multiple images -->
-                                        <?php 
-                                        // Parse gallery URLs from metadata if available
-                                        $galleryImages = json_decode($post['media_metadata'] ?? '[]', true);
-                                        if (is_array($galleryImages) && count($galleryImages) > 1):
-                                            $imageCount = count($galleryImages);
-                                            $gridClass = 'grid-' . min($imageCount, 4);
-                                        ?>
-                                            <div class="post-media-grid <?= $gridClass ?>">
-                                                <?php foreach (array_slice($galleryImages, 0, 4) as $index => $imageUrl): ?>
-                                                    <img src="<?= htmlspecialchars($imageUrl) ?>" 
-                                                         class="gallery-image" 
-                                                         alt="Gallery image <?= $index + 1 ?>"
-                                                         loading="lazy"
-                                                         onclick="openImageModal('<?= htmlspecialchars($imageUrl) ?>', 'Gallery image <?= $index + 1 ?>')">
-                                                    <?php if ($index === 3 && $imageCount > 4): ?>
-                                                        <div class="gallery-overlay">+<?= $imageCount - 4 ?> more</div>
-                                                    <?php endif; ?>
-                                                <?php endforeach; ?>
-                                            </div>
-                                        <?php else: ?>
-                                            <img src="<?= htmlspecialchars($post['media_url']) ?>" 
-                                                 class="post-media-image" 
-                                                 alt="<?= htmlspecialchars($post['title'] ?: 'Post image') ?>"
-                                                 loading="lazy">
-                                        <?php endif; ?>
+                                <!-- Post Content -->
+                                <div class="<?= !$hasAccess && $post['is_premium'] ? 'premium-overlay' : '' ?>">
+                                    <?php if ($hasAccess || !$post['is_premium']): ?>
+                                        <p class="card-text"><?= nl2br(htmlspecialchars($post['content'])) ?></p>
+                                    <?php else: ?>
+                                        <div class="premium-blur">
+                                            <p class="card-text"><?= nl2br(htmlspecialchars(substr($post['content'], 0, 100))) ?>...</p>
+                                        </div>
+                                        <div class="premium-lock">
+                                            <i class="fas fa-lock fa-2x mb-2"></i>
+                                            <h6>Premium Content</h6>
+                                            <p class="mb-3">Subscribe to unlock this exclusive content</p>
+                                            <a href="../subscription/plans.php" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-crown me-1"></i>Subscribe Now
+                                            </a>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
-                            <?php elseif ($post['media_url'] && !$hasAccess && $post['is_premium']): ?>
-                                <!-- Blurred preview for premium media -->
-                                <div class="post-media-container premium-overlay">
-                                    <div class="premium-blur">
+
+                                <!-- Post Media -->
+                                <?php if ($post['media_url'] && $hasAccess): ?>
+                                    <div class="post-media-container">
                                         <?php if ($post['media_type'] === 'image'): ?>
                                             <img src="<?= htmlspecialchars($post['media_url']) ?>" 
                                                  class="post-media-image" 
-                                                 alt="Premium content"
-                                                 style="filter: blur(15px);">
+                                                 alt="<?= htmlspecialchars($post['title'] ?: 'Post image') ?>"
+                                                 loading="lazy"
+                                                 onclick="openImageModal('<?= htmlspecialchars($post['media_url']) ?>', '<?= htmlspecialchars($post['title'] ?: 'Post image') ?>')">
                                         <?php elseif ($post['media_type'] === 'video'): ?>
-                                            <video class="post-media-video" style="filter: blur(15px);" muted>
+                                            <video controls class="post-media-video" preload="metadata">
                                                 <source src="<?= htmlspecialchars($post['media_url']) ?>" type="video/mp4">
+                                                Your browser does not support the video tag.
                                             </video>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="premium-lock">
-                                        <i class="fas fa-lock fa-2x mb-2"></i>
-                                        <h6>Premium Media</h6>
-                                        <p class="mb-3">Subscribe to view this content</p>
-                                        <a href="../subscription/plans.php" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-crown me-1"></i>Subscribe Now
-                                        </a>
+                                <?php elseif ($post['media_url'] && !$hasAccess && $post['is_premium']): ?>
+                                    <!-- Blurred preview for premium media -->
+                                    <div class="post-media-container premium-overlay">
+                                        <div class="premium-blur">
+                                            <?php if ($post['media_type'] === 'image'): ?>
+                                                <img src="<?= htmlspecialchars($post['media_url']) ?>" 
+                                                     class="post-media-image" 
+                                                     alt="Premium content"
+                                                     style="filter: blur(15px);">
+                                            <?php elseif ($post['media_type'] === 'video'): ?>
+                                                <video class="post-media-video" style="filter: blur(15px);" muted>
+                                                    <source src="<?= htmlspecialchars($post['media_url']) ?>" type="video/mp4">
+                                                </video>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="premium-lock">
+                                            <i class="fas fa-lock fa-2x mb-2"></i>
+                                            <h6>Premium Media</h6>
+                                            <p class="mb-3">Subscribe to view this content</p>
+                                            <a href="../subscription/plans.php" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-crown me-1"></i>Subscribe Now
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Post Actions -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <button class="like-btn me-3 <?= $post['user_liked'] ? 'liked' : '' ?>" 
+                                                data-post-id="<?= $post['id'] ?>">
+                                            <i class="fas fa-heart me-1"></i>
+                                            <span class="like-count"><?= $post['like_count'] ?></span>
+                                        </button>
+                                        
+                                        <button class="comment-toggle me-3" data-post-id="<?= $post['id'] ?>">
+                                            <i class="fas fa-comment me-1"></i>
+                                            <span class="comment-count"><?= $post['comments_count'] ?></span> comments
+                                        </button>
+                                        
+                                        <span class="text-muted">
+                                            <i class="fas fa-eye me-1"></i>
+                                            <?= $post['views'] ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="dropdown">
+                                        <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-share me-2"></i>Share</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-bookmark me-2"></i>Save</a></li>
+                                            <li><a class="dropdown-item" href="#"><i class="fas fa-flag me-2"></i>Report</a></li>
+                                        </ul>
                                     </div>
                                 </div>
-                            <?php endif; ?>
 
-                            <!-- Post Actions -->
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <button class="like-btn me-3 <?= $post['user_liked'] ? 'liked' : '' ?>" 
-                                            data-post-id="<?= $post['id'] ?>">
-                                        <i class="fas fa-heart me-1"></i>
-                                        <span class="like-count"><?= $post['like_count'] ?></span>
-                                    </button>
-                                    
-                                    <button class="comment-toggle me-3" data-post-id="<?= $post['id'] ?>">
-                                        <i class="fas fa-comment me-1"></i>
-                                        <span class="comment-count"><?= $post['comments_count'] ?></span> comments
-                                    </button>
-                                    
-                                    <span class="text-muted">
-                                        <i class="fas fa-eye me-1"></i>
-                                        <?= $post['views'] ?? 0 ?>
-                                    </span>
-                                </div>
-                                
-                                <div class="dropdown">
-                                    <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-ellipsis-h"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="fas fa-share me-2"></i>Share</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="fas fa-bookmark me-2"></i>Save</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="fas fa-flag me-2"></i>Report</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <!-- Comments Section -->
-                            <div class="comments-section" id="comments-<?= $post['id'] ?>">
-                                <?php if (canCommentOnPost($post, $currentUser)): ?>
-                                    <!-- Comment Form -->
-                                    <div class="comment-form">
-                                        <div class="d-flex align-items-start">
-                                            <img src="<?= getAvatarUrl($currentUser['avatar']) ?>" 
-                                                 alt="Your Avatar" 
-                                                 class="comment-avatar me-2">
-                                            <div class="flex-grow-1">
-                                                <textarea class="form-control mb-2" 
-                                                         rows="2" 
-                                                         placeholder="Write a comment..." 
-                                                         id="comment-text-<?= $post['id'] ?>"
-                                                         maxlength="1000"></textarea>
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-info-circle me-1"></i>
-                                                        Be respectful and kind
-                                                    </small>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <div class="loading-spinner" id="loading-<?= $post['id'] ?>"></div>
-                                                        <button class="btn-comment" onclick="submitComment(<?= $post['id'] ?>)">
+                                <!-- Comments Section -->
+                                <div class="comments-section" id="comments-<?= $post['id'] ?>">
+                                    <?php if (canCommentOnPost($post, $currentUser, $subscriptionActive)): ?>
+                                        <!-- Comment Form -->
+                                        <form class="comment-form mb-3" data-post-id="<?= $post['id'] ?>">
+                                            <div class="d-flex">
+                                                <img src="<?= getAvatarUrl($currentUser['avatar']) ?>" 
+                                                     alt="<?= htmlspecialchars($currentUser['username']) ?>" 
+                                                     class="comment-avatar me-2">
+                                                <div class="flex-grow-1">
+                                                    <textarea class="form-control form-control-sm comment-input" 
+                                                            placeholder="Write a comment..." 
+                                                            rows="2"></textarea>
+                                                    <div class="text-end mt-2">
+                                                        <button type="submit" class="btn btn-primary btn-sm">
                                                             <i class="fas fa-paper-plane me-1"></i>Comment
                                                         </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                <?php elseif ($post['is_premium']): ?>
-                                    <!-- Premium Comment Lock -->
-                                    <div class="comment-premium-lock">
-                                        <i class="fas fa-lock fa-2x mb-2 text-muted"></i>
-                                        <h6>Premium Comments</h6>
-                                        <p class="text-muted mb-3">
-                                            Subscribe to join the conversation on this exclusive content.
-                                        </p>
-                                        <a href="../subscription/plans.php" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-crown me-1"></i>Subscribe Now
-                                        </a>
-                                    </div>
-                                <?php endif; ?>
-
-                                <!-- Comments List -->
-                                <div class="comments-list" id="comments-list-<?= $post['id'] ?>">
-                                    <?php if (isset($comments[$post['id']])): ?>
-                                        <?php foreach ($comments[$post['id']] as $comment): ?>
-                                            <div class="comment-item" data-comment-id="<?= $comment['id'] ?>">
-                                                <div class="d-flex align-items-start">
-                                                    <?php 
-                                                    $commentAvatarClass = 'comment-avatar';
-                                                    if ($comment['role'] === 'chloe') {
-                                                        $commentAvatarClass .= ' chloe-avatar';
-                                                    } elseif ($comment['role'] === 'admin') {
-                                                        $commentAvatarClass .= ' admin-avatar';
-                                                    }
-                                                    ?>
-                                                    <img src="<?= getAvatarUrl($comment['avatar']) ?>" 
-                                                         alt="<?= htmlspecialchars($comment['username']) ?>" 
-                                                         class="<?= $commentAvatarClass ?> me-2">
-                                                    <div class="flex-grow-1">
-                                                        <div class="d-flex align-items-center mb-1">
-                                                            <strong class="me-2">
-                                                                <?= htmlspecialchars($comment['username']) ?>
-                                                                <?php if ($comment['role'] === 'chloe'): ?>
-                                                                    <i class="fas fa-star text-warning ms-1" title="Chloe Belle"></i>
-                                                                <?php elseif ($comment['role'] === 'admin'): ?>
-                                                                    <i class="fas fa-shield-alt text-danger ms-1" title="Administrator"></i>
+                                        </form>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Comments List -->
+                                    <div class="comments-list" id="comments-list-<?= $post['id'] ?>">
+                                        <?php if (isset($comments[$post['id']])): ?>
+                                            <?php foreach ($comments[$post['id']] as $comment): ?>
+                                                <div class="comment" data-comment-id="<?= $comment['id'] ?>">
+                                                    <div class="d-flex">
+                                                        <img src="<?= getAvatarUrl($comment['avatar']) ?>" 
+                                                             alt="<?= htmlspecialchars($comment['username']) ?>" 
+                                                             class="comment-avatar me-2">
+                                                        <div class="flex-grow-1">
+                                                            <div class="d-flex align-items-center">
+                                                                <strong class="me-2"><?= htmlspecialchars($comment['username']) ?></strong>
+                                                                <small class="text-muted"><?= timeAgo($comment['created_at']) ?></small>
+                                                                <?php if ($currentUser['id'] === $comment['user_id'] || in_array($currentUser['role'], ['admin', 'chloe'])): ?>
+                                                                    <button class="btn btn-sm btn-link text-danger ms-auto" onclick="deleteComment(<?= $comment['id'] ?>, <?= $post['id'] ?>)">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
                                                                 <?php endif; ?>
-                                                            </strong>
-                                                            <small class="text-muted"><?= timeAgo($comment['created_at']) ?></small>
-                                                        </div>
-                                                        <p class="mb-1"><?= nl2br(htmlspecialchars($comment['content'])) ?></p>
-                                                        <div class="comment-actions">
-                                                            <button class="btn btn-link btn-sm p-0 me-2 text-muted comment-like-btn <?= $comment['user_liked'] ? 'liked' : '' ?>" 
-                                                                    data-comment-id="<?= $comment['id'] ?>">
-                                                                <i class="fas fa-heart me-1"></i>
-                                                                <span class="comment-like-count"><?= $comment['like_count'] ?></span>
-                                                            </button>
-                                                            <?php if ($currentUser['id'] === $comment['user_id'] || in_array($currentUser['role'], ['admin', 'chloe'])): ?>
-                                                                <button class="btn btn-link btn-sm p-0 text-danger ms-2" 
-                                                                        onclick="deleteComment(<?= $comment['id'] ?>, <?= $post['id'] ?>)">
-                                                                    <i class="fas fa-trash me-1"></i>Delete
-                                                                </button>
-                                                            <?php endif; ?>
+                                                            </div>
+                                                            <p class="mb-0"><?= nl2br(htmlspecialchars($comment['content'])) ?></p>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <p class="text-muted text-center">No comments yet. Be the first to comment!</p>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
 
                 <!-- Pagination -->
                 <?php if ($totalPages > 1): ?>
-                    <nav aria-label="Posts pagination">
+                    <nav aria-label="Feed pagination" class="mt-4">
                         <ul class="pagination justify-content-center">
                             <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                                 <a class="page-link" href="?page=<?= max(1, $page - 1) ?>">Previous</a>
@@ -1069,232 +944,266 @@ function timeAgo($datetime) {
                             </a>
                         <?php else: ?>
                             <div class="alert alert-success">
-                                <i class="fas fa-crown me-2"></i>
+                                <i class="fas fa-check-circle me-2"></i>
                                 <strong><?= ucfirst($currentUser['subscription_status']) ?> Subscriber</strong><br>
-                                <small>
-                                    <?php if ($currentUser['subscription_expires']): ?>
-                                        Expires: <?= date('M j, Y', strtotime($currentUser['subscription_expires'])) ?>
-                                    <?php else: ?>
-                                        Lifetime access
-                                    <?php endif; ?>
-                                </small>
+                                <?php if ($currentUser['subscription_expires']): ?>
+                                    <small>Expires: <?= date('M j, Y', strtotime($currentUser['subscription_expires'])) ?></small>
+                                <?php else: ?>
+                                    <small>Lifetime Access</small>
+                                <?php endif; ?>
                             </div>
+                            <a href="../user/settings.php" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-cog me-1"></i>Manage Subscription
+                            </a>
                         <?php endif; ?>
                     </div>
 
                     <!-- Quick Stats -->
                     <div class="mb-4">
                         <h6>Community Stats</h6>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Total Posts:</span>
-                            <strong><?= $totalPosts ?></strong>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Your Posts:</span>
-                            <strong>0</strong>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <strong><?= $totalPosts ?></strong><br>
+                                    <small class="text-muted">Total Posts</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <strong><?= count($posts) ?></strong><br>
+                                    <small class="text-muted">This Page</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Navigation Links -->
-                    <div class="d-grid gap-2">
-                        <a href="../user/profile.php" class="btn btn-outline-primary">
-                            <i class="fas fa-user me-2"></i>My Profile
-                        </a>
-                        <a href="../user/settings.php" class="btn btn-outline-secondary">
-                            <i class="fas fa-cog me-2"></i>Settings
-                        </a>
-                        <?php if (in_array($currentUser['role'], ['admin', 'chloe'])): ?>
-                            <a href="../admin/" class="btn btn-outline-success">
-                                <i class="fas fa-cogs me-2"></i>Admin Panel
+                    <!-- Quick Links -->
+                    <div>
+                        <h6>Quick Links</h6>
+                        <div class="list-group list-group-flush">
+                            <a href="../subscription/plans.php" class="list-group-item list-group-item-action">
+                                <i class="fas fa-star me-2"></i>Subscription Plans
                             </a>
-                        <?php endif; ?>
+                            <a href="../user/settings.php" class="list-group-item list-group-item-action">
+                                <i class="fas fa-cog me-2"></i>Account Settings
+                            </a>
+                            <?php if (in_array($currentUser['role'], ['admin', 'chloe'])): ?>
+                                <a href="../admin/index.php" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-shield-alt me-2"></i>Admin Panel
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 text-center">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index: 1050;"></button>
+                    <img id="modalImage" src="" alt="" class="img-fluid rounded" style="max-height: 90vh;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Premium content checkbox handler
+        // Premium subscription checkbox handler
         document.getElementById('is_premium')?.addEventListener('change', function() {
-            const subscriptionSelect = document.getElementById('subscription_required');
-            subscriptionSelect.disabled = !this.checked;
+            document.getElementById('subscription_required').disabled = !this.checked;
             if (!this.checked) {
-                subscriptionSelect.value = 'none';
+                document.getElementById('subscription_required').value = 'none';
             }
         });
+
+        // Photo upload handler
+        document.getElementById('photoUpload')?.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                
+                document.getElementById('videoUpload').value = '';
+                document.getElementById('fileName').textContent = `📷 ${file.name} (${fileSize} MB)`;
+                document.getElementById('filePreview').style.display = 'block';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('videoPreview').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Video upload handler
+        document.getElementById('videoUpload')?.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                
+                document.getElementById('photoUpload').value = '';
+                document.getElementById('fileName').textContent = `🎥 ${file.name} (${fileSize} MB)`;
+                document.getElementById('filePreview').style.display = 'block';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('videoPreview').src = e.target.result;
+                    document.getElementById('videoPreview').style.display = 'block';
+                    document.getElementById('imagePreview').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Clear file selection
+        function clearFileSelection() {
+            document.getElementById('photoUpload').value = '';
+            document.getElementById('videoUpload').value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('videoPreview').style.display = 'none';
+        }
 
         // Like button functionality
-        document.querySelectorAll('.like-btn[data-post-id]').forEach(btn => {
+        document.querySelectorAll('.like-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const postId = this.dataset.postId;
+                const likeCount = this.querySelector('.like-count');
                 const isLiked = this.classList.contains('liked');
                 
-                // TODO: Implement AJAX like functionality
-                console.log('Like post:', postId, 'Currently liked:', isLiked);
+                // Show loading state
+                const originalIcon = this.querySelector('i');
+                originalIcon.className = 'fas fa-spinner fa-spin me-1';
                 
-                // Toggle like state (placeholder)
-                this.classList.toggle('liked');
-                const countSpan = this.querySelector('.like-count');
-                let count = parseInt(countSpan.textContent);
-                countSpan.textContent = isLiked ? count - 1 : count + 1;
-            });
-        });
-
-        // Image click to enlarge functionality
-        document.querySelectorAll('.post-media-image').forEach(img => {
-            img.addEventListener('click', function() {
-                openImageModal(this.src, this.alt);
-            });
-        });
-
-        // Function to open image in modal
-        function openImageModal(src, alt) {
-            // Create modal if it doesn't exist
-            let modal = document.getElementById('imageModal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'imageModal';
-                modal.className = 'modal fade';
-                modal.innerHTML = `
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                        <div class="modal-content bg-transparent border-0">
-                            <div class="modal-body p-0 text-center">
-                                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" style="z-index: 1050;"></button>
-                                <img id="modalImage" src="" alt="" class="img-fluid rounded" style="max-height: 90vh;">
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-            
-            // Set image source and show modal
-            document.getElementById('modalImage').src = src;
-            document.getElementById('modalImage').alt = alt;
-            new bootstrap.Modal(modal).show();
-        }
-
-        // Comment system functionality
-        function toggleComments(postId) {
-            const commentsSection = document.getElementById(`comments-${postId}`);
-            const toggleBtn = document.querySelector(`[data-post-id="${postId}"].comment-toggle`);
-            
-            if (commentsSection.classList.contains('show')) {
-                commentsSection.classList.remove('show');
-                toggleBtn.classList.remove('active');
-            } else {
-                commentsSection.classList.add('show');
-                toggleBtn.classList.add('active');
-                
-                setTimeout(() => {
-                    commentsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }, 100);
-            }
-        }
-
-        function submitComment(postId) {
-            const textarea = document.getElementById(`comment-text-${postId}`);
-            const loadingSpinner = document.getElementById(`loading-${postId}`);
-            const commentText = textarea.value.trim();
-            
-            if (!commentText) {
-                alert('Please enter a comment');
-                return;
-            }
-            
-            if (commentText.length > 1000) {
-                alert('Comment is too long (max 1000 characters)');
-                return;
-            }
-            
-            loadingSpinner.style.display = 'block';
-            textarea.disabled = true;
-            
-            fetch('../api/comments.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'create',
-                    post_id: postId,
-                    content: commentText
+                fetch('../api/likes.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'toggle',
+                        post_id: postId
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const commentsList = document.getElementById(`comments-list-${postId}`);
-                    const newCommentHtml = createCommentHTML(data.comment);
-                    commentsList.insertAdjacentHTML('beforeend', newCommentHtml);
-                    
-                    const countElement = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
-                    const currentCount = parseInt(countElement.textContent);
-                    countElement.textContent = currentCount + 1;
-                    
-                    textarea.value = '';
-                    textarea.style.height = 'auto';
-                    
-                    const newComment = commentsList.lastElementChild;
-                    newComment.style.background = '#d4edda';
-                    setTimeout(() => {
-                        newComment.style.background = '#ffffff';
-                    }, 2000);
-                    
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to post comment'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to post comment. Please try again.');
-            })
-            .finally(() => {
-                loadingSpinner.style.display = 'none';
-                textarea.disabled = false;
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.classList.toggle('liked', data.liked);
+                        likeCount.textContent = data.like_count;
+                    } else {
+                        console.error('Like error:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
+                })
+                .finally(() => {
+                    // Restore heart icon
+                    originalIcon.className = 'fas fa-heart me-1';
+                });
             });
-        }
+        });
 
-        function createCommentHTML(comment) {
-            const roleIcon = comment.role === 'chloe' ? '<i class="fas fa-star text-warning ms-1" title="Chloe Belle"></i>' :
-                            comment.role === 'admin' ? '<i class="fas fa-shield-alt text-danger ms-1" title="Administrator"></i>' : '';
-            
-            const avatarClass = comment.role === 'chloe' ? 'comment-avatar chloe-avatar' :
-                               comment.role === 'admin' ? 'comment-avatar admin-avatar' : 'comment-avatar';
-            
-            return `
-                <div class="comment-item fade-in" data-comment-id="${comment.id}">
-                    <div class="d-flex align-items-start">
-                        <img src="${comment.avatar_url}" 
-                             alt="${comment.username}" 
-                             class="${avatarClass} me-2">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center mb-1">
-                                <strong class="me-2">
-                                    ${comment.username}${roleIcon}
-                                </strong>
-                                <small class="text-muted">just now</small>
-                            </div>
-                            <p class="mb-1">${comment.content}</p>
-                            <div class="comment-actions">
-                                <button class="btn btn-link btn-sm p-0 me-2 text-muted comment-like-btn" 
-                                        data-comment-id="${comment.id}">
-                                    <i class="fas fa-heart me-1"></i>
-                                    <span class="comment-like-count">0</span>
-                                </button>
-                                <button class="btn btn-link btn-sm p-0 text-danger ms-2" 
-                                        onclick="deleteComment(${comment.id}, ${comment.post_id})">
-                                    <i class="fas fa-trash me-1"></i>Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        // Comment toggle functionality
+        document.querySelectorAll('.comment-toggle').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const commentsSection = document.getElementById(`comments-${postId}`);
+                
+                commentsSection.classList.toggle('show');
+            });
+        });
 
+        // Comment form submission
+        document.querySelectorAll('.comment-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const postId = this.dataset.postId;
+                const textarea = this.querySelector('.comment-input');
+                const content = textarea.value.trim();
+                
+                if (!content) {
+                    alert('Please enter a comment');
+                    return;
+                }
+                
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Posting...';
+                submitBtn.disabled = true;
+                
+                fetch('../api/comments.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'create',
+                        post_id: postId,
+                        content: content
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        textarea.value = '';
+                        
+                        // Update comment count
+                        const countElement = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
+                        const currentCount = parseInt(countElement.textContent);
+                        countElement.textContent = currentCount + 1;
+                        
+                        // Add new comment to list
+                        const commentsList = document.getElementById(`comments-list-${postId}`);
+                        const newCommentHtml = `
+                            <div class="comment" data-comment-id="${data.comment.id}">
+                                <div class="d-flex">
+                                    <img src="${data.comment.avatar_url}" alt="${data.comment.username}" class="comment-avatar me-2">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center">
+                                            <strong class="me-2">${data.comment.username}</strong>
+                                            <small class="text-muted">just now</small>
+                                            <button class="btn btn-sm btn-link text-danger ms-auto" onclick="deleteComment(${data.comment.id}, ${postId})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        <p class="mb-0">${data.comment.content}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        if (commentsList.innerHTML.includes('No comments yet')) {
+                            commentsList.innerHTML = newCommentHtml;
+                        } else {
+                            commentsList.insertAdjacentHTML('beforeend', newCommentHtml);
+                        }
+                        
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to post comment'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error posting comment:', error);
+                    alert('Failed to post comment. Please try again.');
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
+        });
+
+        // Delete comment function
         function deleteComment(commentId, postId) {
             if (!confirm('Are you sure you want to delete this comment?')) {
                 return;
@@ -1314,18 +1223,18 @@ function timeAgo($datetime) {
             .then(data => {
                 if (data.success) {
                     const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-                    commentElement.style.transition = 'all 0.3s ease';
-                    commentElement.style.opacity = '0';
-                    commentElement.style.transform = 'translateX(-20px)';
+                    commentElement.remove();
                     
-                    setTimeout(() => {
-                        commentElement.remove();
-                    }, 300);
-                    
+                    // Update comment count
                     const countElement = document.querySelector(`[data-post-id="${postId}"] .comment-count`);
                     const currentCount = parseInt(countElement.textContent);
                     countElement.textContent = Math.max(0, currentCount - 1);
                     
+                    // Check if no comments left
+                    const commentsList = document.getElementById(`comments-list-${postId}`);
+                    if (commentsList.children.length === 0) {
+                        commentsList.innerHTML = '<p class="text-muted text-center">No comments yet. Be the first to comment!</p>';
+                    }
                 } else {
                     alert('Error: ' + (data.message || 'Failed to delete comment'));
                 }
@@ -1336,80 +1245,33 @@ function timeAgo($datetime) {
             });
         }
 
-        function likeComment(commentId) {
-            const likeBtn = document.querySelector(`[data-comment-id="${commentId}"].comment-like-btn`);
-            const likeCount = likeBtn.querySelector('.comment-like-count');
-            const isLiked = likeBtn.classList.contains('liked');
-            
-            fetch('../api/comments.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: isLiked ? 'unlike' : 'like',
-                    comment_id: commentId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    likeBtn.classList.toggle('liked');
-                    likeCount.textContent = data.like_count;
-                    
-                    likeBtn.style.transform = 'scale(1.2)';
-                    setTimeout(() => {
-                        likeBtn.style.transform = 'scale(1)';
-                    }, 200);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+        // Image modal functionality
+        function openImageModal(src, alt) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('modalImage').alt = alt;
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
         }
 
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Comment toggle buttons
-            document.querySelectorAll('.comment-toggle').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const postId = this.dataset.postId;
-                    toggleComments(postId);
-                });
-            });
-
-            // Comment like buttons
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.comment-like-btn')) {
-                    const btn = e.target.closest('.comment-like-btn');
-                    const commentId = btn.dataset.commentId;
-                    likeComment(commentId);
-                }
-            });
-
-            // Auto-resize textareas
-            document.querySelectorAll('textarea[id^="comment-text-"]').forEach(textarea => {
-                textarea.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = this.scrollHeight + 'px';
-                });
-
-                // Ctrl+Enter to submit
-                textarea.addEventListener('keydown', function(e) {
-                    if (e.ctrlKey && e.key === 'Enter') {
-                        const postId = this.id.split('-').pop();
-                        submitComment(postId);
-                    }
-                });
-            });
+        // Form validation
+        document.getElementById('createPostForm')?.addEventListener('submit', function(e) {
+            const content = this.querySelector('[name="content"]').value.trim();
+            if (!content) {
+                e.preventDefault();
+                alert('Please enter some content for your post.');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Posting...';
+            submitBtn.disabled = true;
         });
 
-        console.log('🌟 Chloe Belle Feed loaded successfully!');
-        console.log('👤 Current user:', '<?= htmlspecialchars($currentUser['username']) ?>');
-        console.log('💎 Subscription:', '<?= $currentUser['subscription_status'] ?>');
-        console.log('🖼️ Avatar system enabled');
-        console.log('📱 Media sizing optimized');
-        console.log('💬 Comment system ready!');
+        console.log('✨ Feed page loaded successfully!');
+        console.log('📊 Total posts:', <?= count($posts) ?>);
+        console.log('👤 Current user role:', '<?= $currentUser['role'] ?>');
+        console.log('💎 Subscription active:', <?= $subscriptionActive ? 'true' : 'false' ?>);
+        console.log('💬 Comments loaded in PHP: <?= array_sum(array_map("count", $comments)) ?> total');
     </script>
 </body>
 </html>

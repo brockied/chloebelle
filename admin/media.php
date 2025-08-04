@@ -1,8 +1,18 @@
-<?php
+<div class="alert alert-info mt-3">
+                            <small>
+                                <i class="fas fa-lightbulb me-1"></i>
+                                <strong>Tip:</strong> This image appears next to the login form on your homepage. 
+                                Images are stored in full quality for the best viewing experience.
+                            </small>
+                        </div><?php
 /**
- * Media Management Page for Chloe Belle Admin
- * Allows uploading and managing homepage and featured images
+ * MINIMAL Media Management - No Image Processing
+ * Just handles file uploads without any GD or thumbnail creation
  */
+
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 session_start();
 require_once '../config.php';
@@ -16,7 +26,41 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['admin', 'chlo
 $message = '';
 $messageType = 'info';
 
-// Handle file uploads
+// Handle success messages from redirects
+if (isset($_GET['hero_success']) && $_GET['hero_success'] == '1') {
+    $message = 'Homepage hero image uploaded successfully!';
+    $messageType = 'success';
+} elseif (isset($_GET['featured_success']) && is_numeric($_GET['featured_success'])) {
+    $count = intval($_GET['featured_success']);
+    $message = "Successfully uploaded {$count} featured image" . ($count > 1 ? 's' : '') . "!";
+    $messageType = 'success';
+} elseif (isset($_GET['delete_success']) && $_GET['delete_success'] == '1') {
+    $message = 'Image deleted successfully!';
+    $messageType = 'success';
+}
+
+// Get featured images (no thumbnails needed for now)
+$featuredImages = [];
+$featuredDir = '../uploads/featured';
+if (is_dir($featuredDir)) {
+    $files = scandir($featuredDir);
+    foreach ($files as $file) {
+        if (preg_match('/^featured_[a-f0-9]+\.(jpg|jpeg|png|webp)$/i', $file)) {
+            $featuredImages[] = [
+                'filename' => $file,
+                'url' => 'uploads/featured/' . $file,
+                'size' => file_exists($featuredDir . '/' . $file) ? filesize($featuredDir . '/' . $file) : 0,
+                'modified' => file_exists($featuredDir . '/' . $file) ? filemtime($featuredDir . '/' . $file) : 0
+            ];
+        }
+    }
+    // Sort by modification time (newest first)
+    usort($featuredImages, function($a, $b) {
+        return $b['modified'] - $a['modified'];
+    });
+}
+
+// Handle file uploads - MINIMAL VERSION
 if ($_POST && isset($_FILES)) {
     try {
         $uploadType = $_POST['upload_type'] ?? '';
@@ -27,7 +71,7 @@ if ($_POST && isset($_FILES)) {
             $file = $_FILES['homepage_hero'] ?? null;
             
             if ($file && $file['error'] === UPLOAD_ERR_OK) {
-                // Validate file
+                // Basic validation
                 $fileInfo = pathinfo($file['name']);
                 $extension = strtolower($fileInfo['extension']);
                 
@@ -39,39 +83,26 @@ if ($_POST && isset($_FILES)) {
                     throw new Exception('File too large. Maximum size is 10MB.');
                 }
                 
-                // Verify it's actually an image
-                $imageInfo = getimagesize($file['tmp_name']);
-                if (!$imageInfo) {
-                    throw new Exception('Invalid image file.');
-                }
-                
-                // Create upload directory if it doesn't exist
+                // Create upload directory
                 $uploadDir = '../uploads/chloe';
                 if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
+                    if (!mkdir($uploadDir, 0755, true)) {
+                        throw new Exception('Failed to create upload directory.');
+                    }
                 }
                 
-                // Backup current image
-                $currentImage = $uploadDir . '/profile.jpg';
-                if (file_exists($currentImage)) {
-                    $backupName = $uploadDir . '/profile_backup_' . date('Y-m-d_H-i-s') . '.jpg';
-                    copy($currentImage, $backupName);
-                }
-                
-                // Move uploaded file
+                // Simple file move - NO IMAGE PROCESSING
                 $destination = $uploadDir . '/profile.jpg';
                 if (move_uploaded_file($file['tmp_name'], $destination)) {
-                    // Set proper permissions
                     chmod($destination, 0644);
-                    
-                    // Create thumbnail for admin preview
-                    $thumbnailPath = $uploadDir . '/profile_thumb.jpg';
-                    createThumbnail($destination, $thumbnailPath, 300, 300);
-                    
-                    $message = 'Homepage hero image updated successfully!';
+                    $message = 'Homepage hero image uploaded successfully!';
                     $messageType = 'success';
+                    
+                    // Refresh page to show new image
+                    header('Location: media.php?hero_success=1');
+                    exit;
                 } else {
-                    throw new Exception('Failed to upload file. Check directory permissions.');
+                    throw new Exception('Failed to upload file.');
                 }
             } else {
                 throw new Exception('No file uploaded or upload error occurred.');
@@ -82,21 +113,34 @@ if ($_POST && isset($_FILES)) {
             $files = $_FILES['featured_images'] ?? null;
             
             if ($files && is_array($files['name'])) {
+                // Create upload directory
                 $uploadDir = '../uploads/featured';
                 if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
+                    if (!mkdir($uploadDir, 0755, true)) {
+                        throw new Exception('Failed to create featured directory.');
+                    }
+                }
+                
+                // Check 3-image limit
+                $existingCount = count($featuredImages);
+                $filesToUpload = count(array_filter($files['name']));
+                
+                if ($existingCount + $filesToUpload > 3) {
+                    throw new Exception("Cannot upload {$filesToUpload} images. Maximum 3 total. Currently have {$existingCount}.");
                 }
                 
                 $uploadedCount = 0;
                 $errors = [];
                 
                 for ($i = 0; $i < count($files['name']); $i++) {
+                    if (empty($files['name'][$i])) continue;
+                    
                     if ($files['error'][$i] === UPLOAD_ERR_OK) {
                         $fileName = $files['name'][$i];
                         $tempFile = $files['tmp_name'][$i];
                         $fileSize = $files['size'][$i];
                         
-                        // Validate file
+                        // Basic validation
                         $fileInfo = pathinfo($fileName);
                         $extension = strtolower($fileInfo['extension']);
                         
@@ -110,13 +154,12 @@ if ($_POST && isset($_FILES)) {
                             continue;
                         }
                         
-                        // Generate unique filename
+                        // Generate filename and move file - NO IMAGE PROCESSING
                         $newFileName = 'featured_' . uniqid() . '.' . $extension;
                         $destination = $uploadDir . '/' . $newFileName;
                         
                         if (move_uploaded_file($tempFile, $destination)) {
                             chmod($destination, 0644);
-                            createThumbnail($destination, $uploadDir . '/thumb_' . $newFileName, 300, 300);
                             $uploadedCount++;
                         } else {
                             $errors[] = "Failed to upload {$fileName}";
@@ -129,8 +172,12 @@ if ($_POST && isset($_FILES)) {
                     $messageType = 'success';
                     
                     if (!empty($errors)) {
-                        $message .= ' ' . implode(', ', $errors);
+                        $message .= ' (' . implode(', ', $errors) . ')';
                     }
+                    
+                    // Refresh page to show new images
+                    header('Location: media.php?featured_success=' . $uploadedCount);
+                    exit;
                 } else {
                     $message = 'No files were uploaded. ' . implode(', ', $errors);
                     $messageType = 'warning';
@@ -152,15 +199,11 @@ if (isset($_GET['delete']) && isset($_GET['type'])) {
     try {
         if ($deleteType === 'featured' && preg_match('/^featured_[a-f0-9]+\.(jpg|jpeg|png|webp)$/i', $filename)) {
             $filePath = '../uploads/featured/' . $filename;
-            $thumbPath = '../uploads/featured/thumb_' . $filename;
             
             if (file_exists($filePath)) {
                 unlink($filePath);
-                if (file_exists($thumbPath)) {
-                    unlink($thumbPath);
-                }
-                $message = 'Image deleted successfully';
-                $messageType = 'success';
+                header('Location: media.php?delete_success=1');
+                exit;
             }
         }
     } catch (Exception $e) {
@@ -169,95 +212,10 @@ if (isset($_GET['delete']) && isset($_GET['type'])) {
     }
 }
 
-// Get current images
+// Get current hero image
 $currentHeroImage = '../uploads/chloe/profile.jpg';
 $heroImageExists = file_exists($currentHeroImage);
 $heroImageUrl = $heroImageExists ? 'uploads/chloe/profile.jpg?v=' . filemtime($currentHeroImage) : null;
-
-// Get featured images
-$featuredImages = [];
-$featuredDir = '../uploads/featured';
-if (is_dir($featuredDir)) {
-    $files = scandir($featuredDir);
-    foreach ($files as $file) {
-        if (preg_match('/^featured_[a-f0-9]+\.(jpg|jpeg|png|webp)$/i', $file)) {
-            $featuredImages[] = [
-                'filename' => $file,
-                'url' => 'uploads/featured/' . $file,
-                'thumb_url' => 'uploads/featured/thumb_' . $file,
-                'size' => file_exists($featuredDir . '/' . $file) ? filesize($featuredDir . '/' . $file) : 0,
-                'modified' => file_exists($featuredDir . '/' . $file) ? filemtime($featuredDir . '/' . $file) : 0
-            ];
-        }
-    }
-    // Sort by modification time (newest first)
-    usort($featuredImages, function($a, $b) {
-        return $b['modified'] - $a['modified'];
-    });
-}
-
-// Helper function to create thumbnail
-function createThumbnail($sourcePath, $destPath, $maxWidth = 300, $maxHeight = 300, $quality = 80) {
-    if (!file_exists($sourcePath)) {
-        return false;
-    }
-    
-    $imageInfo = getimagesize($sourcePath);
-    if (!$imageInfo) {
-        return false;
-    }
-    
-    $sourceWidth = $imageInfo[0];
-    $sourceHeight = $imageInfo[1];
-    $sourceMime = $imageInfo['mime'];
-    
-    // Calculate new dimensions
-    $ratio = min($maxWidth / $sourceWidth, $maxHeight / $sourceHeight);
-    $newWidth = intval($sourceWidth * $ratio);
-    $newHeight = intval($sourceHeight * $ratio);
-    
-    // Create source image
-    switch ($sourceMime) {
-        case 'image/jpeg':
-            $sourceImage = imagecreatefromjpeg($sourcePath);
-            break;
-        case 'image/png':
-            $sourceImage = imagecreatefrompng($sourcePath);
-            break;
-        case 'image/webp':
-            $sourceImage = imagecreatefromwebp($sourcePath);
-            break;
-        default:
-            return false;
-    }
-    
-    if (!$sourceImage) {
-        return false;
-    }
-    
-    // Create thumbnail
-    $thumbnail = imagecreatetruecolor($newWidth, $newHeight);
-    
-    // Preserve transparency for PNG
-    if ($sourceMime == 'image/png') {
-        imagealphablending($thumbnail, false);
-        imagesavealpha($thumbnail, true);
-        $transparent = imagecolorallocatealpha($thumbnail, 255, 255, 255, 127);
-        imagefilledrectangle($thumbnail, 0, 0, $newWidth, $newHeight, $transparent);
-    }
-    
-    // Resize image
-    imagecopyresampled($thumbnail, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $sourceWidth, $sourceHeight);
-    
-    // Save thumbnail
-    $result = imagejpeg($thumbnail, $destPath, $quality);
-    
-    // Clean up memory
-    imagedestroy($sourceImage);
-    imagedestroy($thumbnail);
-    
-    return $result;
-}
 
 function formatFileSize($bytes) {
     $units = ['B', 'KB', 'MB', 'GB'];
@@ -326,10 +284,6 @@ function formatFileSize($bytes) {
             transition: transform 0.3s ease;
         }
         
-        .media-card:hover {
-            transform: translateY(-2px);
-        }
-        
         .upload-zone {
             border: 2px dashed #6c5ce7;
             border-radius: 10px;
@@ -343,11 +297,6 @@ function formatFileSize($bytes) {
         .upload-zone:hover {
             border-color: #5a4fcf;
             background: #f0f0ff;
-        }
-        
-        .upload-zone.dragover {
-            border-color: #5a4fcf;
-            background: #e8e5ff;
         }
         
         .image-preview {
@@ -373,7 +322,7 @@ function formatFileSize($bytes) {
         
         .featured-item img {
             width: 100%;
-            height: 150px;
+            height: 200px;
             object-fit: cover;
         }
         
@@ -427,40 +376,11 @@ function formatFileSize($bytes) {
                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                 </a>
             </li>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="users.php">
-                    <i class="fas fa-users me-2"></i>Users
-                </a>
-            </li>
-            <?php endif; ?>
-            <li class="nav-item">
-                <a class="nav-link" href="posts.php">
-                    <i class="fas fa-edit me-2"></i>Posts
-                </a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link active" href="media.php">
                     <i class="fas fa-images me-2"></i>Media
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="roles.php">
-                    <i class="fas fa-user-tag me-2"></i>Roles
-                </a>
-            </li>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="subscriptions.php">
-                    <i class="fas fa-credit-card me-2"></i>Subscriptions
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="settings.php">
-                    <i class="fas fa-cog me-2"></i>Settings
-                </a>
-            </li>
-            <?php endif; ?>
             <li class="nav-item mt-4">
                 <a class="nav-link" href="../feed/index.php">
                     <i class="fas fa-eye me-2"></i>View Site
@@ -479,11 +399,8 @@ function formatFileSize($bytes) {
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1>Media Management</h1>
-                <p class="text-muted">Upload and manage images for your website</p>
+                <p class="text-muted">Upload and manage images for your website (Maximum 3 featured images)</p>
             </div>
-            <button class="btn btn-outline-secondary d-lg-none" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
         </div>
 
         <?php if ($message): ?>
@@ -537,14 +454,6 @@ function formatFileSize($bytes) {
                                 <i class="fas fa-upload me-2"></i>Upload Hero Image
                             </button>
                         </form>
-                        
-                        <div class="alert alert-info mt-3">
-                            <small>
-                                <i class="fas fa-lightbulb me-1"></i>
-                                <strong>Tip:</strong> This image appears next to the login form on your homepage. 
-                                A backup of your current image will be saved automatically.
-                            </small>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -554,60 +463,89 @@ function formatFileSize($bytes) {
         <div class="media-card">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-images me-2"></i>Featured Gallery Images
+                    <i class="fas fa-images me-2"></i>Featured Gallery Images (3 Maximum)
                 </h5>
             </div>
             <div class="card-body">
-                <!-- Upload New Featured Images -->
                 <div class="mb-4">
-                    <h6>Upload Featured Images</h6>
-                    <form method="POST" enctype="multipart/form-data">
-                        <input type="hidden" name="upload_type" value="featured_gallery">
-                        
-                        <div class="upload-zone" onclick="document.getElementById('featured_images').click()">
-                            <i class="fas fa-images fa-3x text-success mb-3"></i>
-                            <h6>Upload Multiple Images</h6>
-                            <p class="text-muted mb-0">
-                                Select multiple JPG, PNG, or WebP files<br>
-                                Each file up to 10MB
-                            </p>
-                            <input type="file" id="featured_images" name="featured_images[]" accept="image/*" multiple style="display: none;" required>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6>Upload Featured Images</h6>
+                        <span class="badge bg-<?= count($featuredImages) >= 3 ? 'danger' : 'primary' ?>">
+                            <?= count($featuredImages) ?>/3 Images
+                        </span>
+                    </div>
+                    
+                    <?php if (count($featuredImages) >= 3): ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Maximum Reached:</strong> You already have 3 featured images. 
+                            Delete some images first if you want to upload new ones.
                         </div>
+                    <?php else: ?>
+                        <form method="POST" enctype="multipart/form-data">
+                            <input type="hidden" name="upload_type" value="featured_gallery">
+                            
+                            <div class="upload-zone" onclick="document.getElementById('featured_images').click()">
+                                <i class="fas fa-images fa-3x text-success mb-3"></i>
+                                <h6>Upload TikTok Format Images</h6>
+                                <p class="text-muted mb-0">
+                                    Select up to <?= 3 - count($featuredImages) ?> JPG, PNG, or WebP files<br>
+                                    Each file up to 10MB • Best: 1080x1920 (9:16 ratio)
+                                </p>
+                                <input type="file" id="featured_images" name="featured_images[]" accept="image/*" multiple style="display: none;" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success mt-3">
+                                <i class="fas fa-upload me-2"></i>Upload Featured Images
+                            </button>
+                        </form>
                         
-                        <button type="submit" class="btn btn-success mt-3">
-                            <i class="fas fa-upload me-2"></i>Upload Featured Images
-                        </button>
-                    </form>
+                        <div class="alert alert-info mt-3">
+                            <small>
+                                <i class="fas fa-lightbulb me-1"></i>
+                                <strong>Quality Tip:</strong> Images are stored in full quality for the best viewing experience. 
+                                TikTok format (9:16 ratio) works best for the homepage display.
+                            </small>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Current Featured Images -->
                 <div>
-                    <h6>Current Featured Images (<?= count($featuredImages) ?>)</h6>
+                    <h6>Homepage Featured Images (<?= count($featuredImages) ?>/3)</h6>
                     
                     <?php if (empty($featuredImages)): ?>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            No featured images uploaded yet. Upload some images to display in your homepage gallery.
+                            No featured images uploaded yet. Upload up to 3 images for your homepage gallery.
                         </div>
                     <?php else: ?>
+                        <div class="alert alert-<?= count($featuredImages) >= 3 ? 'success' : 'warning' ?> mb-3">
+                            <i class="fas fa-<?= count($featuredImages) >= 3 ? 'check-circle' : 'info-circle' ?> me-2"></i>
+                            <?php if (count($featuredImages) >= 3): ?>
+                                Perfect! You have all 3 featured images for your homepage gallery.
+                            <?php else: ?>
+                                You can upload <?= 3 - count($featuredImages) ?> more image(s) to complete your homepage gallery.
+                            <?php endif; ?>
+                        </div>
+                        
                         <div class="featured-grid">
-                            <?php foreach ($featuredImages as $image): ?>
+                            <?php foreach ($featuredImages as $index => $image): ?>
                                 <div class="featured-item">
-                                    <?php if (file_exists('../' . $image['thumb_url'])): ?>
-                                        <img src="../<?= $image['thumb_url'] ?>?v=<?= $image['modified'] ?>" alt="Featured Image">
-                                    <?php else: ?>
-                                        <img src="../<?= $image['url'] ?>?v=<?= $image['modified'] ?>" alt="Featured Image">
-                                    <?php endif; ?>
+                                    <img src="../<?= $image['url'] ?>?v=<?= $image['modified'] ?>" alt="Featured Image <?= $index + 1 ?>">
                                     
                                     <div class="overlay">
                                         <div class="text-center">
+                                            <div class="mb-2">
+                                                <small class="text-white fw-bold">Position <?= $index + 1 ?>/3</small>
+                                            </div>
                                             <div class="btn-group">
                                                 <a href="../<?= $image['url'] ?>" target="_blank" class="btn btn-sm btn-light">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="?delete=<?= urlencode($image['filename']) ?>&type=featured" 
                                                    class="btn btn-sm btn-danger"
-                                                   onclick="return confirm('Delete this image?')">
+                                                   onclick="return confirm('Delete this image from position <?= $index + 1 ?>?')">
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                             </div>
@@ -626,63 +564,9 @@ function formatFileSize($bytes) {
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
-        });
-
-        // Drag and drop functionality
-        function setupDragAndDrop(zoneSelector, inputSelector) {
-            const zone = document.querySelector(zoneSelector);
-            const input = document.querySelector(inputSelector);
-            
-            if (!zone || !input) return;
-            
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                zone.addEventListener(eventName, preventDefaults, false);
-            });
-            
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            
-            ['dragenter', 'dragover'].forEach(eventName => {
-                zone.addEventListener(eventName, highlight, false);
-            });
-            
-            ['dragleave', 'drop'].forEach(eventName => {
-                zone.addEventListener(eventName, unhighlight, false);
-            });
-            
-            function highlight(e) {
-                zone.classList.add('dragover');
-            }
-            
-            function unhighlight(e) {
-                zone.classList.remove('dragover');
-            }
-            
-            zone.addEventListener('drop', handleDrop, false);
-            
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                input.files = files;
-                
-                if (files.length > 0) {
-                    const fileName = files.length > 1 ? `${files.length} files selected` : files[0].name;
-                    zone.querySelector('h6').textContent = fileName;
-                }
-            }
-        }
-        
-        // Setup drag and drop for both upload zones
-        setupDragAndDrop('.upload-zone:first-of-type', '#homepage_hero');
-        setupDragAndDrop('.upload-zone:last-of-type', '#featured_images');
-        
-        // File input change handlers
+        // File input handlers
         document.getElementById('homepage_hero')?.addEventListener('change', function() {
             if (this.files.length > 0) {
                 this.closest('.upload-zone').querySelector('h6').textContent = this.files[0].name;
@@ -698,6 +582,7 @@ function formatFileSize($bytes) {
 
         console.log('🖼️ Media Management loaded');
         console.log('📊 Featured images:', <?= count($featuredImages) ?>);
+        console.log('🎯 Maximum allowed: 3 images');
     </script>
 </body>
 </html>

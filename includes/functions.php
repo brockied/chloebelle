@@ -1,73 +1,29 @@
 <?php
 /**
- * Core Functions for Chloe Belle Website
- * Contains utility functions used throughout the application
+ * Common functions for Chloe Belle Website
+ * Updated with media upload functionality
  */
 
-// Prevent direct access
-if (!defined('DB_HOST')) {
-    die('Direct access not permitted.');
-}
-
 /**
- * Sanitize input data
- */
-function sanitize($data) {
-    if (is_array($data)) {
-        return array_map('sanitize', $data);
-    }
-    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
-}
-
-/**
- * Validate email address
- */
-function isValidEmail($email) {
-    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-}
-
-/**
- * Validate URL
- */
-function isValidUrl($url) {
-    return filter_var($url, FILTER_VALIDATE_URL) !== false;
-}
-
-/**
- * Generate secure random token
- */
-function generateToken($length = 32) {
-    return bin2hex(random_bytes($length));
-}
-
-/**
- * Hash password securely
- */
-function hashPassword($password) {
-    return password_hash($password, PASSWORD_DEFAULT);
-}
-
-/**
- * Verify password
- */
-function verifyPassword($password, $hash) {
-    return password_verify($password, $hash);
-}
-
-/**
- * Generate secure filename
+ * Generate secure filename for uploads
  */
 function generateSecureFilename($originalName) {
-    $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-    $filename = uniqid() . '_' . time();
-    return $filename . '.' . strtolower($extension);
+    $pathInfo = pathinfo($originalName);
+    $extension = strtolower($pathInfo['extension']);
+    $baseName = preg_replace('/[^a-zA-Z0-9_-]/', '', $pathInfo['filename']);
+    
+    // Generate unique filename
+    $timestamp = time();
+    $randomString = bin2hex(random_bytes(8));
+    
+    return $baseName . '_' . $timestamp . '_' . $randomString . '.' . $extension;
 }
 
 /**
- * Get file size in readable format
+ * Format file size for display
  */
 function formatFileSize($bytes) {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $units = ['B', 'KB', 'MB', 'GB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
     $pow = min($pow, count($units) - 1);
@@ -78,252 +34,29 @@ function formatFileSize($bytes) {
 }
 
 /**
- * Time ago helper
+ * Create blurred version of image for premium content
  */
-function timeAgo($datetime) {
-    $time = time() - strtotime($datetime);
-    
-    if ($time < 60) return 'just now';
-    if ($time < 3600) return floor($time / 60) . 'm ago';
-    if ($time < 86400) return floor($time / 3600) . 'h ago';
-    if ($time < 2592000) return floor($time / 86400) . 'd ago';
-    if ($time < 31536000) return floor($time / 2592000) . 'mo ago';
-    
-    return floor($time / 31536000) . 'y ago';
-}
-
-/**
- * Format currency
- */
-function formatCurrency($amount, $currency = 'GBP') {
-    $symbols = [
-        'GBP' => '£',
-        'USD' => '
-        ',
-        'EUR' => '€'
-    ];
-    
-    $symbol = $symbols[$currency] ?? $currency;
-    return $symbol . number_format($amount, 2);
-}
-
-/**
- * Get user's IP address
- */
-function getUserIP() {
-    $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
-    
-    foreach ($ipKeys as $key) {
-        if (!empty($_SERVER[$key])) {
-            $ips = explode(',', $_SERVER[$key]);
-            $ip = trim($ips[0]);
-            
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return $ip;
-            }
-        }
-    }
-    
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-}
-
-/**
- * Get user agent information
- */
-function getUserAgent() {
-    return $_SERVER['HTTP_USER_AGENT'] ?? '';
-}
-
-/**
- * Detect device type
- */
-function getDeviceType() {
-    $userAgent = getUserAgent();
-    
-    if (preg_match('/Mobile|Android|iPhone|iPad/', $userAgent)) {
-        return 'mobile';
-    } elseif (preg_match('/Tablet/', $userAgent)) {
-        return 'tablet';
-    }
-    
-    return 'desktop';
-}
-
-/**
- * Create thumbnail from image
- */
-function createThumbnail($sourcePath, $destPath, $maxWidth = 300, $maxHeight = 300, $quality = 80) {
+function createBlurredImage($sourcePath, $intensity = 15) {
     if (!file_exists($sourcePath)) {
         return false;
     }
     
-    $imageInfo = getimagesize($sourcePath);
-    if (!$imageInfo) {
-        return false;
-    }
+    $pathInfo = pathinfo($sourcePath);
+    $sourceMime = mime_content_type($sourcePath);
     
-    $sourceWidth = $imageInfo[0];
-    $sourceHeight = $imageInfo[1];
-    $sourceMime = $imageInfo['mime'];
-    
-    // Calculate new dimensions
-    $ratio = min($maxWidth / $sourceWidth, $maxHeight / $sourceHeight);
-    $newWidth = intval($sourceWidth * $ratio);
-    $newHeight = intval($sourceHeight * $ratio);
-    
-    // Create source image
+    // Create image resource based on mime type
     switch ($sourceMime) {
         case 'image/jpeg':
-            $sourceImage = imagecreatefromjpeg($sourcePath);
+            $image = imagecreatefromjpeg($sourcePath);
             break;
         case 'image/png':
-            $sourceImage = imagecreatefrompng($sourcePath);
+            $image = imagecreatefrompng($sourcePath);
             break;
         case 'image/gif':
-            $sourceImage = imagecreatefromgif($sourcePath);
+            $image = imagecreatefromgif($sourcePath);
             break;
         case 'image/webp':
-            $sourceImage = imagecreatefromwebp($sourcePath);
-            break;
-        default:
-            return false;
-    }
-    
-    if (!$sourceImage) {
-        return false;
-    }
-    
-    // Create thumbnail
-    $thumbnail = imagecreatetruecolor($newWidth, $newHeight);
-    
-    // Preserve transparency for PNG and GIF
-    if ($sourceMime == 'image/png' || $sourceMime == 'image/gif') {
-        imagealphablending($thumbnail, false);
-        imagesavealpha($thumbnail, true);
-        $transparent = imagecolorallocatealpha($thumbnail, 255, 255, 255, 127);
-        imagefilledrectangle($thumbnail, 0, 0, $newWidth, $newHeight, $transparent);
-    }
-    
-    // Resize image
-    imagecopyresampled($thumbnail, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $sourceWidth, $sourceHeight);
-    
-    // Save thumbnail
-    $result = false;
-    switch ($sourceMime) {
-        case 'image/jpeg':
-            $result = imagejpeg($thumbnail, $destPath, $quality);
-            break;
-        case 'image/png':
-            $result = imagepng($thumbnail, $destPath);
-            break;
-        case 'image/gif':
-            $result = imagegif($thumbnail, $destPath);
-            break;
-        case 'image/webp':
-            $result = imagewebp($thumbnail, $destPath, $quality);
-            break;
-    }
-    
-    // Clean up memory
-    imagedestroy($sourceImage);
-    imagedestroy($thumbnail);
-    
-    return $result;
-}
-
-/**
- * Add watermark to image
- */
-function addWatermark($imagePath, $watermarkText = 'Chloe Belle', $opacity = 50) {
-    if (!file_exists($imagePath)) {
-        return false;
-    }
-    
-    $imageInfo = getimagesize($imagePath);
-    if (!$imageInfo) {
-        return false;
-    }
-    
-    $sourceMime = $imageInfo['mime'];
-    
-    // Create source image
-    switch ($sourceMime) {
-        case 'image/jpeg':
-            $image = imagecreatefromjpeg($imagePath);
-            break;
-        case 'image/png':
-            $image = imagecreatefrompng($imagePath);
-            break;
-        default:
-            return false;
-    }
-    
-    if (!$image) {
-        return false;
-    }
-    
-    // Get image dimensions
-    $width = imagesx($image);
-    $height = imagesy($image);
-    
-    // Create watermark color with transparency
-    $watermarkColor = imagecolorallocatealpha($image, 255, 255, 255, 127 - ($opacity * 1.27));
-    
-    // Set font size based on image size
-    $fontSize = max(12, min($width, $height) / 20);
-    
-    // Calculate text position (bottom right)
-    $textBox = imagettfbbox($fontSize, 0, __DIR__ . '/../assets/fonts/arial.ttf', $watermarkText);
-    $textWidth = $textBox[4] - $textBox[0];
-    $textHeight = $textBox[1] - $textBox[7];
-    
-    $x = $width - $textWidth - 20;
-    $y = $height - 20;
-    
-    // Add watermark text
-    if (file_exists(__DIR__ . '/../assets/fonts/arial.ttf')) {
-        imagettftext($image, $fontSize, 0, $x, $y, $watermarkColor, __DIR__ . '/../assets/fonts/arial.ttf', $watermarkText);
-    } else {
-        imagestring($image, 5, $x, $y - 20, $watermarkText, $watermarkColor);
-    }
-    
-    // Save image
-    $result = false;
-    switch ($sourceMime) {
-        case 'image/jpeg':
-            $result = imagejpeg($image, $imagePath, 90);
-            break;
-        case 'image/png':
-            $result = imagepng($image, $imagePath);
-            break;
-    }
-    
-    imagedestroy($image);
-    return $result;
-}
-
-/**
- * Blur image for premium content
- */
-function blurImage($imagePath, $blurIntensity = 10) {
-    if (!file_exists($imagePath)) {
-        return false;
-    }
-    
-    $imageInfo = getimagesize($imagePath);
-    if (!$imageInfo) {
-        return false;
-    }
-    
-    $sourceMime = $imageInfo['mime'];
-    
-    // Create source image
-    switch ($sourceMime) {
-        case 'image/jpeg':
-            $image = imagecreatefromjpeg($imagePath);
-            break;
-        case 'image/png':
-            $image = imagecreatefrompng($imagePath);
+            $image = imagecreatefromwebp($sourcePath);
             break;
         default:
             return false;
@@ -334,12 +67,11 @@ function blurImage($imagePath, $blurIntensity = 10) {
     }
     
     // Apply blur filter
-    for ($i = 0; $i < $blurIntensity; $i++) {
+    for ($i = 0; $i < $intensity; $i++) {
         imagefilter($image, IMG_FILTER_GAUSSIAN_BLUR);
     }
     
-    // Save blurred image
-    $pathInfo = pathinfo($imagePath);
+    // Save blurred version
     $blurredPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_blurred.' . $pathInfo['extension'];
     
     $result = false;
@@ -349,6 +81,12 @@ function blurImage($imagePath, $blurIntensity = 10) {
             break;
         case 'image/png':
             $result = imagepng($image, $blurredPath);
+            break;
+        case 'image/gif':
+            $result = imagegif($image, $blurredPath);
+            break;
+        case 'image/webp':
+            $result = imagewebp($image, $blurredPath);
             break;
     }
     
@@ -431,472 +169,378 @@ function uploadFile($file, $uploadDir, $allowedTypes = ['jpg', 'jpeg', 'png', 'g
     $filename = generateSecureFilename($file['name']);
     $uploadPath = $uploadDir . '/' . $filename;
     
-    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        // Set proper permissions
+        chmod($uploadPath, 0644);
+        
+        return [
+            'success' => true,
+            'path' => $uploadPath,
+            'filename' => $filename,
+            'original_name' => $file['name'],
+            'size' => $file['size'],
+            'mime_type' => mime_content_type($uploadPath)
+        ];
+    } else {
         return ['success' => false, 'errors' => ['Failed to move uploaded file']];
     }
+}
+
+/**
+ * Resize image to specified dimensions
+ */
+function resizeImage($sourcePath, $maxWidth = 1200, $maxHeight = 800, $quality = 90) {
+    if (!file_exists($sourcePath)) {
+        return false;
+    }
     
-    // Set proper permissions
-    chmod($uploadPath, 0644);
+    $imageInfo = getimagesize($sourcePath);
+    if (!$imageInfo) {
+        return false;
+    }
+    
+    list($originalWidth, $originalHeight, $imageType) = $imageInfo;
+    
+    // Calculate new dimensions
+    $ratio = min($maxWidth / $originalWidth, $maxHeight / $originalHeight);
+    $newWidth = intval($originalWidth * $ratio);
+    $newHeight = intval($originalHeight * $ratio);
+    
+    // Create image resource
+    switch ($imageType) {
+        case IMAGETYPE_JPEG:
+            $sourceImage = imagecreatefromjpeg($sourcePath);
+            break;
+        case IMAGETYPE_PNG:
+            $sourceImage = imagecreatefrompng($sourcePath);
+            break;
+        case IMAGETYPE_GIF:
+            $sourceImage = imagecreatefromgif($sourcePath);
+            break;
+        case IMAGETYPE_WEBP:
+            $sourceImage = imagecreatefromwebp($sourcePath);
+            break;
+        default:
+            return false;
+    }
+    
+    if (!$sourceImage) {
+        return false;
+    }
+    
+    // Create new image
+    $newImage = imagecreatetruecolor($newWidth, $newHeight);
+    
+    // Preserve transparency for PNG and GIF
+    if ($imageType == IMAGETYPE_PNG || $imageType == IMAGETYPE_GIF) {
+        imagecolortransparent($newImage, imagecolorallocatealpha($newImage, 0, 0, 0, 127));
+        imagealphablending($newImage, false);
+        imagesavealpha($newImage, true);
+    }
+    
+    // Resize image
+    imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $originalWidth, $originalHeight);
+    
+    // Save resized image
+    $pathInfo = pathinfo($sourcePath);
+    $resizedPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_resized.' . $pathInfo['extension'];
+    
+    $result = false;
+    switch ($imageType) {
+        case IMAGETYPE_JPEG:
+            $result = imagejpeg($newImage, $resizedPath, $quality);
+            break;
+        case IMAGETYPE_PNG:
+            $result = imagepng($newImage, $resizedPath);
+            break;
+        case IMAGETYPE_GIF:
+            $result = imagegif($newImage, $resizedPath);
+            break;
+        case IMAGETYPE_WEBP:
+            $result = imagewebp($newImage, $resizedPath, $quality);
+            break;
+    }
+    
+    // Clean up memory
+    imagedestroy($sourceImage);
+    imagedestroy($newImage);
+    
+    return $result ? $resizedPath : false;
+}
+
+/**
+ * Create thumbnail from image
+ */
+function createThumbnail($sourcePath, $thumbWidth = 300, $thumbHeight = 300) {
+    return resizeImage($sourcePath, $thumbWidth, $thumbHeight, 85);
+}
+
+/**
+ * Get image dimensions
+ */
+function getImageDimensions($imagePath) {
+    if (!file_exists($imagePath)) {
+        return false;
+    }
+    
+    $imageInfo = getimagesize($imagePath);
+    if (!$imageInfo) {
+        return false;
+    }
     
     return [
-        'success' => true,
-        'filename' => $filename,
-        'path' => $uploadPath,
-        'url' => str_replace($_SERVER['DOCUMENT_ROOT'], '', $uploadPath),
-        'size' => filesize($uploadPath),
-        'mime_type' => mime_content_type($uploadPath)
+        'width' => $imageInfo[0],
+        'height' => $imageInfo[1],
+        'type' => $imageInfo[2],
+        'mime' => $imageInfo['mime']
     ];
 }
 
 /**
- * Profanity filter
+ * Sanitize filename for web use
  */
-function filterProfanity($text) {
-    if (!ENABLE_PROFANITY_FILTER) {
-        return $text;
-    }
+function sanitizeFilename($filename) {
+    // Remove any character that isn't alphanumeric, underscore, dash, or dot
+    $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
     
-    static $profanityList = null;
+    // Remove multiple consecutive dots
+    $filename = preg_replace('/\.+/', '.', $filename);
     
-    if ($profanityList === null) {
-        $profanityList = dbFetchAll(
-            "SELECT word, replacement FROM profanity_filter WHERE is_active = 1 AND language = ?",
-            [DEFAULT_LANGUAGE]
-        );
-    }
+    // Trim dots from beginning and end
+    $filename = trim($filename, '.');
     
-    foreach ($profanityList as $profanity) {
-        $pattern = '/\b' . preg_quote($profanity['word'], '/') . '\b/i';
-        $text = preg_replace($pattern, $profanity['replacement'], $text);
-    }
-    
-    return $text;
+    return $filename;
 }
 
 /**
- * Send email using templates
+ * Check if file is an image
  */
-function sendEmail($to, $templateKey, $variables = [], $language = null) {
-    if (!$language) {
-        $language = DEFAULT_LANGUAGE;
-    }
+function isImage($filePath) {
+    $imageTypes = [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_WEBP];
+    $imageInfo = getimagesize($filePath);
     
-    // Get email template
-    $template = dbFetch(
-        "SELECT * FROM email_templates WHERE template_key = ? AND language = ? AND is_active = 1",
-        [$templateKey, $language]
-    );
-    
-    if (!$template) {
-        error_log("Email template not found: {$templateKey}");
-        return false;
-    }
-    
-    // Replace variables in template
-    $subject = $template['subject'];
-    $bodyHtml = $template['body_html'];
-    $bodyText = $template['body_text'];
-    
-    foreach ($variables as $key => $value) {
-        $placeholder = '{{' . $key . '}}';
-        $subject = str_replace($placeholder, $value, $subject);
-        $bodyHtml = str_replace($placeholder, $value, $bodyHtml);
-        $bodyText = str_replace($placeholder, $value, $bodyText);
-    }
-    
-    // Queue email for sending
-    $emailData = [
-        'to_email' => $to,
-        'subject' => $subject,
-        'body_html' => $bodyHtml,
-        'body_text' => $bodyText,
-        'priority' => 5,
-        'status' => 'pending'
-    ];
-    
-    $emailId = dbInsert('email_queue', $emailData);
-    
-    // Try to send immediately if possible
-    if (defined('SMTP_HOST') && !empty(SMTP_HOST)) {
-        return sendQueuedEmail($emailId);
-    }
-    
-    return true; // Queued for later sending
+    return $imageInfo && in_array($imageInfo[2], $imageTypes);
 }
 
 /**
- * Send queued email
+ * Check if file is a video
  */
-function sendQueuedEmail($emailId) {
-    $email = dbFetch("SELECT * FROM email_queue WHERE id = ? AND status = 'pending'", [$emailId]);
+function isVideo($filePath) {
+    $mimeType = mime_content_type($filePath);
+    $videoMimes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv'];
     
-    if (!$email) {
-        return false;
-    }
-    
-    // Update status to sending
-    dbUpdate('email_queue', ['status' => 'sending'], 'id = ?', [$emailId]);
-    
-    try {
-        // Use PHPMailer or similar here
-        // For now, we'll use basic mail() function
-        $headers = [
-            'MIME-Version: 1.0',
-            'Content-type: text/html; charset=UTF-8',
-            'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
-            'Reply-To: ' . FROM_EMAIL,
-            'X-Mailer: PHP/' . phpversion()
-        ];
-        
-        $success = mail($email['to_email'], $email['subject'], $email['body_html'], implode("\r\n", $headers));
-        
-        if ($success) {
-            dbUpdate('email_queue', [
-                'status' => 'sent',
-                'sent_at' => date('Y-m-d H:i:s')
-            ], 'id = ?', [$emailId]);
-            
-            return true;
-        } else {
-            throw new Exception('mail() function failed');
-        }
-        
-    } catch (Exception $e) {
-        error_log("Email sending failed: " . $e->getMessage());
-        
-        $attempts = $email['attempts'] + 1;
-        $status = $attempts >= $email['max_attempts'] ? 'failed' : 'pending';
-        
-        dbUpdate('email_queue', [
-            'status' => $status,
-            'attempts' => $attempts,
-            'error_message' => $e->getMessage()
-        ], 'id = ?', [$emailId]);
-        
-        return false;
-    }
+    return in_array($mimeType, $videoMimes);
 }
 
 /**
- * Get site setting
+ * Get video duration (requires ffmpeg)
  */
-function getSetting($key, $default = null) {
-    static $settings = [];
+function getVideoDuration($videoPath) {
+    if (!file_exists($videoPath)) {
+        return false;
+    }
     
-    if (!isset($settings[$key])) {
-        $setting = dbFetch("SELECT setting_value, setting_type FROM site_settings WHERE setting_key = ?", [$key]);
-        
-        if ($setting) {
-            $value = $setting['setting_value'];
-            
-            switch ($setting['setting_type']) {
-                case 'boolean':
-                    $value = (bool)$value;
-                    break;
-                case 'integer':
-                    $value = (int)$value;
-                    break;
-                case 'json':
-                    $value = json_decode($value, true);
-                    break;
+    // This requires ffmpeg to be installed on the server
+    $command = "ffprobe -v quiet -show_entries format=duration -of csv=\"p=0\" " . escapeshellarg($videoPath);
+    $duration = shell_exec($command);
+    
+    return $duration ? floatval(trim($duration)) : false;
+}
+
+/**
+ * Create video thumbnail (requires ffmpeg)
+ */
+function createVideoThumbnail($videoPath, $outputPath = null, $timeOffset = '00:00:01') {
+    if (!file_exists($videoPath)) {
+        return false;
+    }
+    
+    if (!$outputPath) {
+        $pathInfo = pathinfo($videoPath);
+        $outputPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_thumb.jpg';
+    }
+    
+    // This requires ffmpeg to be installed on the server
+    $command = "ffmpeg -i " . escapeshellarg($videoPath) . 
+               " -ss $timeOffset -vframes 1 -y " . 
+               escapeshellarg($outputPath) . " 2>&1";
+    
+    $output = shell_exec($command);
+    
+    return file_exists($outputPath) ? $outputPath : false;
+}
+
+/**
+ * Delete file securely
+ */
+function deleteFile($filePath) {
+    if (file_exists($filePath)) {
+        return unlink($filePath);
+    }
+    return true;
+}
+
+/**
+ * Clean old uploaded files (cleanup function)
+ */
+function cleanupOldFiles($directory, $maxAge = 86400) {
+    if (!is_dir($directory)) {
+        return false;
+    }
+    
+    $files = glob($directory . '/*');
+    $deleted = 0;
+    
+    foreach ($files as $file) {
+        if (is_file($file) && (time() - filemtime($file)) > $maxAge) {
+            if (unlink($file)) {
+                $deleted++;
             }
-            
-            $settings[$key] = $value;
-        } else {
-            $settings[$key] = $default;
         }
     }
     
-    return $settings[$key];
+    return $deleted;
 }
 
 /**
- * Set site setting
+ * Validate image dimensions
  */
-function setSetting($key, $value, $type = 'string') {
-    if ($type === 'json') {
-        $value = json_encode($value);
-    } elseif ($type === 'boolean') {
-        $value = $value ? '1' : '0';
+function validateImageDimensions($imagePath, $minWidth = 0, $minHeight = 0, $maxWidth = 5000, $maxHeight = 5000) {
+    $dimensions = getImageDimensions($imagePath);
+    
+    if (!$dimensions) {
+        return ['valid' => false, 'error' => 'Unable to read image dimensions'];
     }
     
-    $exists = dbExists('site_settings', 'setting_key = ?', [$key]);
-    
-    if ($exists) {
-        return dbUpdate('site_settings', [
-            'setting_value' => $value,
-            'setting_type' => $type
-        ], 'setting_key = ?', [$key]);
-    } else {
-        return dbInsert('site_settings', [
-            'setting_key' => $key,
-            'setting_value' => $value,
-            'setting_type' => $type
-        ]);
+    if ($dimensions['width'] < $minWidth || $dimensions['height'] < $minHeight) {
+        return ['valid' => false, 'error' => "Image too small. Minimum size: {$minWidth}x{$minHeight}px"];
     }
+    
+    if ($dimensions['width'] > $maxWidth || $dimensions['height'] > $maxHeight) {
+        return ['valid' => false, 'error' => "Image too large. Maximum size: {$maxWidth}x{$maxHeight}px"];
+    }
+    
+    return ['valid' => true, 'dimensions' => $dimensions];
 }
 
 /**
- * Log admin action
+ * Add watermark to image
  */
-function logAdminAction($adminId, $action, $targetType = null, $targetId = null, $details = null) {
-    $logData = [
-        'admin_id' => $adminId,
-        'action' => $action,
-        'target_type' => $targetType,
-        'target_id' => $targetId,
-        'details' => $details ? json_encode($details) : null,
-        'ip_address' => getUserIP(),
-        'user_agent' => getUserAgent()
+function addWatermark($imagePath, $watermarkPath, $position = 'bottom-right', $opacity = 50) {
+    if (!file_exists($imagePath) || !file_exists($watermarkPath)) {
+        return false;
+    }
+    
+    // Get image info
+    $imageInfo = getimagesize($imagePath);
+    $watermarkInfo = getimagesize($watermarkPath);
+    
+    if (!$imageInfo || !$watermarkInfo) {
+        return false;
+    }
+    
+    // Create image resources
+    $image = imagecreatefromjpeg($imagePath); // Assuming JPEG for simplicity
+    $watermark = imagecreatefrompng($watermarkPath); // Assuming PNG watermark
+    
+    if (!$image || !$watermark) {
+        return false;
+    }
+    
+    // Calculate position
+    $imageWidth = $imageInfo[0];
+    $imageHeight = $imageInfo[1];
+    $watermarkWidth = $watermarkInfo[0];
+    $watermarkHeight = $watermarkInfo[1];
+    
+    $margin = 20;
+    
+    switch ($position) {
+        case 'top-left':
+            $x = $margin;
+            $y = $margin;
+            break;
+        case 'top-right':
+            $x = $imageWidth - $watermarkWidth - $margin;
+            $y = $margin;
+            break;
+        case 'bottom-left':
+            $x = $margin;
+            $y = $imageHeight - $watermarkHeight - $margin;
+            break;
+        case 'bottom-right':
+        default:
+            $x = $imageWidth - $watermarkWidth - $margin;
+            $y = $imageHeight - $watermarkHeight - $margin;
+            break;
+        case 'center':
+            $x = ($imageWidth - $watermarkWidth) / 2;
+            $y = ($imageHeight - $watermarkHeight) / 2;
+            break;
+    }
+    
+    // Apply watermark
+    imagecopymerge($image, $watermark, $x, $y, 0, 0, $watermarkWidth, $watermarkHeight, $opacity);
+    
+    // Save watermarked image
+    $pathInfo = pathinfo($imagePath);
+    $watermarkedPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '_watermarked.' . $pathInfo['extension'];
+    
+    $result = imagejpeg($image, $watermarkedPath, 90);
+    
+    // Clean up memory
+    imagedestroy($image);
+    imagedestroy($watermark);
+    
+    return $result ? $watermarkedPath : false;
+}
+
+/**
+ * Log upload activity
+ */
+function logUploadActivity($userId, $filename, $fileSize, $uploadType = 'general') {
+    // This would typically log to a database or file
+    $logEntry = date('Y-m-d H:i:s') . " - User $userId uploaded $filename ($fileSize bytes) - Type: $uploadType" . PHP_EOL;
+    error_log($logEntry, 3, '../logs/uploads.log');
+}
+
+/**
+ * Check server upload limits
+ */
+function getServerUploadLimits() {
+    return [
+        'max_file_size' => ini_get('upload_max_filesize'),
+        'max_post_size' => ini_get('post_max_size'),
+        'max_execution_time' => ini_get('max_execution_time'),
+        'memory_limit' => ini_get('memory_limit')
     ];
-    
-    return dbInsert('admin_logs', $logData);
 }
 
 /**
- * Check if user has subscription access to content
+ * Convert bytes to human readable format
  */
-function hasSubscriptionAccess($userId, $requiredLevel = 'monthly') {
-    $user = dbFetch(
-        "SELECT subscription_status, subscription_expires FROM users WHERE id = ?",
-        [$userId]
-    );
+function bytesToHuman($bytes) {
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     
-    if (!$user || $user['subscription_status'] === 'none') {
-        return false;
+    for ($i = 0; $bytes > 1024; $i++) {
+        $bytes /= 1024;
     }
     
-    // Check if subscription is expired
-    if ($user['subscription_expires'] && strtotime($user['subscription_expires']) < time()) {
-        return false;
-    }
-    
-    $levels = ['monthly' => 1, 'yearly' => 2, 'lifetime' => 3];
-    $userLevel = $levels[$user['subscription_status']] ?? 0;
-    $requiredLevelValue = $levels[$requiredLevel] ?? 1;
-    
-    return $userLevel >= $requiredLevelValue;
+    return round($bytes, 2) . ' ' . $units[$i];
 }
 
 /**
- * Get user's remaining free post views
+ * Check available disk space
  */
-function getRemainingFreeViews($userId) {
-    $limit = getSetting('free_posts_limit', 3);
+function checkDiskSpace($directory = '../uploads/') {
+    $freeBytes = disk_free_space($directory);
+    $totalBytes = disk_total_space($directory);
     
-    $viewedCount = dbCount(
-        'user_post_access',
-        'user_id = ? AND access_type = "free" AND created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)',
-        [$userId]
-    );
-    
-    return max(0, $limit - $viewedCount);
+    return [
+        'free' => $freeBytes,
+        'total' => $totalBytes,
+        'used' => $totalBytes - $freeBytes,
+        'free_percent' => ($freeBytes / $totalBytes) * 100
+    ];
 }
-
-/**
- * Generate SEO-friendly URL slug
- */
-function createSlug($text) {
-    $text = strtolower($text);
-    $text = preg_replace('/[^a-z0-9\s-]/', '', $text);
-    $text = preg_replace('/[\s-]+/', '-', $text);
-    $text = trim($text, '-');
-    
-    return $text;
-}
-
-/**
- * Redirect with message
- */
-function redirectWithMessage($url, $message, $type = 'info') {
-    $_SESSION['flash_message'] = $message;
-    $_SESSION['flash_type'] = $type;
-    header("Location: {$url}");
-    exit;
-}
-
-/**
- * Get and clear flash message
- */
-function getFlashMessage() {
-    if (isset($_SESSION['flash_message'])) {
-        $message = [
-            'text' => $_SESSION['flash_message'],
-            'type' => $_SESSION['flash_type'] ?? 'info'
-        ];
-        
-        unset($_SESSION['flash_message'], $_SESSION['flash_type']);
-        return $message;
-    }
-    
-    return null;
-}
-
-/**
- * Rate limiting
- */
-function isRateLimited($identifier, $maxAttempts = 5, $timeWindow = 300) {
-    $cacheKey = "rate_limit_{$identifier}";
-    $attempts = $_SESSION[$cacheKey] ?? 0;
-    $lastAttempt = $_SESSION[$cacheKey . '_time'] ?? 0;
-    
-    // Reset counter if time window has passed
-    if (time() - $lastAttempt > $timeWindow) {
-        $attempts = 0;
-    }
-    
-    if ($attempts >= $maxAttempts) {
-        return true;
-    }
-    
-    // Increment attempts
-    $_SESSION[$cacheKey] = $attempts + 1;
-    $_SESSION[$cacheKey . '_time'] = time();
-    
-    return false;
-}
-
-/**
- * Clear rate limit
- */
-function clearRateLimit($identifier) {
-    $cacheKey = "rate_limit_{$identifier}";
-    unset($_SESSION[$cacheKey], $_SESSION[$cacheKey . '_time']);
-}
-
-/**
- * Check maintenance mode
- */
-function isMaintenanceMode() {
-    return getSetting('maintenance_mode', false);
-}
-
-/**
- * Get current user
- */
-function getCurrentUser() {
-    if (!isset($_SESSION['user_id'])) {
-        return null;
-    }
-    
-    static $user = null;
-    
-    if ($user === null) {
-        $user = dbFetch(
-            "SELECT * FROM users WHERE id = ? AND status = 'active'",
-            [$_SESSION['user_id']]
-        );
-    }
-    
-    return $user;
-}
-
-/**
- * Check if user is logged in
- */
-function isLoggedIn() {
-    return getCurrentUser() !== null;
-}
-
-/**
- * Check if user has role
- */
-function hasRole($role) {
-    $user = getCurrentUser();
-    return $user && $user['role'] === $role;
-}
-
-/**
- * Check if user is admin
- */
-function isAdmin() {
-    return hasRole('admin');
-}
-
-/**
- * Require login
- */
-function requireLogin() {
-    if (!isLoggedIn()) {
-        header('Location: /index.php');
-        exit;
-    }
-}
-
-/**
- * Require admin
- */
-function requireAdmin() {
-    requireLogin();
-    
-    if (!isAdmin()) {
-        http_response_code(403);
-        die('Access denied');
-    }
-}
-
-/**
- * CSRF Protection
- */
-function generateCSRFToken() {
-    if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-function validateCSRFToken($token) {
-    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
-}
-
-/**
- * JSON Response helper
- */
-function jsonResponse($data, $statusCode = 200) {
-    http_response_code($statusCode);
-    header('Content-Type: application/json');
-    echo json_encode($data);
-    exit;
-}
-
-/**
- * Error handler
- */
-function handleError($message, $statusCode = 500) {
-    error_log($message);
-    
-    if (DEBUG_MODE) {
-        die($message);
-    } else {
-        http_response_code($statusCode);
-        die('An error occurred. Please try again later.');
-    }
-}
-
-/**
- * Initialize session securely
- */
-function initSecureSession() {
-    // Session configuration
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
-    ini_set('session.use_strict_mode', 1);
-    ini_set('session.cookie_samesite', 'Strict');
-    
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    
-    // Regenerate session ID periodically
-    if (!isset($_SESSION['last_regeneration'])) {
-        $_SESSION['last_regeneration'] = time();
-    } elseif ($_SESSION['last_regeneration'] < (time() - 300)) { // 5 minutes
-        session_regenerate_id(true);
-        $_SESSION['last_regeneration'] = time();
-    }
-}
-
-// Initialize secure session
-initSecureSession();
 ?>
-        '

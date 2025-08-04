@@ -134,3 +134,43 @@ DELIMITER' at line 1
 [03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
 [03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
 [03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 21:10:14 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:14 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:14:27 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:28 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:37 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:38 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:38 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71

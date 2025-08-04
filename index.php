@@ -1,3 +1,38 @@
+
+
+<?php
+// Add this PHP code at the very top of your index.php file, before the DOCTYPE
+
+// Get featured images from uploads directory
+function getFeaturedImages() {
+    $featuredImages = [];
+    $featuredDir = 'uploads/featured';
+    
+    if (is_dir($featuredDir)) {
+        $files = scandir($featuredDir);
+        foreach ($files as $file) {
+            if (preg_match('/^featured_[a-f0-9]+\.(jpg|jpeg|png|webp)$/i', $file)) {
+                $featuredImages[] = [
+                    'filename' => $file,
+                    'url' => 'uploads/featured/' . $file,
+                    'thumb_url' => 'uploads/featured/thumb_' . $file,
+                    'square_url' => 'uploads/featured/square_' . $file,
+                    'size' => file_exists($featuredDir . '/' . $file) ? filesize($featuredDir . '/' . $file) : 0,
+                    'modified' => file_exists($featuredDir . '/' . $file) ? filemtime($featuredDir . '/' . $file) : 0
+                ];
+            }
+        }
+        // Sort by modification time (newest first)
+        usort($featuredImages, function($a, $b) {
+            return $b['modified'] - $a['modified'];
+        });
+    }
+    
+    return $featuredImages;
+}
+
+$featuredImages = getFeaturedImages();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -326,21 +361,25 @@
             transform: translateY(-2px);
         }
 
-        /* Featured Gallery */
+        /* Featured Gallery - 3 TikTok Images Only */
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             margin-top: 3rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .gallery-item {
             position: relative;
-            height: 400px;
+            aspect-ratio: 9/16; /* TikTok aspect ratio */
             border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.4s ease;
+            background: var(--glass);
         }
 
         .gallery-item::before {
@@ -361,18 +400,19 @@
         }
 
         .gallery-item:hover {
-            transform: scale(1.05) rotateZ(1deg);
+            transform: scale(1.02) rotateZ(0.5deg);
         }
 
         .gallery-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center top; /* Focus on top of image for portraits */
             transition: transform 0.4s ease;
         }
 
         .gallery-item:hover .gallery-img {
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
 
         .gallery-content {
@@ -384,11 +424,30 @@
             z-index: 2;
             opacity: 0;
             transition: all 0.4s ease;
+            padding: 20px;
         }
 
         .gallery-item:hover .gallery-content {
             opacity: 1;
         }
+
+        /* Fallback gallery styling */
+        .gallery-fallback {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--glass);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            margin-top: 3rem;
+        }
+
+        .gallery-fallback i {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        /* Alternative masonry-style gallery - REMOVED */
 
         /* Stats Section */
         .stats {
@@ -598,6 +657,12 @@
         }
 
         /* Responsive Design */
+        @media (max-width: 1200px) {
+            .gallery-grid {
+                gap: 1.5rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .hero {
                 text-align: center;
@@ -619,12 +684,14 @@
                 gap: 1.5rem;
             }
             
-            .gallery-item {
-                height: 300px;
-            }
-            
             .glass-card {
                 padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-grid {
+                gap: 1rem;
             }
         }
 
@@ -691,6 +758,8 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--secondary);
         }
+
+        /* Gallery Style Toggle - REMOVED */
     </style>
 </head>
 <body>
@@ -969,7 +1038,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="stat-item">
-                        <div class="stat-number">1.2K+</div>
+                        <div class="stat-number"><?= number_format(count($featuredImages) * 100) ?>+</div>
                         <div class="stat-label">Exclusive Photos</div>
                     </div>
                 </div>
@@ -999,39 +1068,71 @@
                 <p class="lead opacity-75">Discover exclusive AI-generated experiences</p>
             </div>
             
-            <div class="gallery-grid scroll-reveal">
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=600&fit=crop" alt="Featured 1" class="gallery-img">
-                    <div class="gallery-content">
-                        <h5 class="fw-bold mb-2">Premium Collection</h5>
-                        <p class="mb-3">Exclusive content for subscribers</p>
-                        <button class="btn-gradient btn-sm">
-                            <i class="fas fa-unlock me-2"></i>Unlock
+            <div class="scroll-reveal">
+                <?php if (!empty($featuredImages)): ?>
+                    <!-- 3 TikTok Format Images -->
+                    <div class="gallery-grid">
+                        <?php foreach (array_slice($featuredImages, 0, 3) as $index => $image): ?>
+                            <div class="gallery-item" data-image="<?= htmlspecialchars($image['filename']) ?>">
+                                <?php 
+                                // Use original image for best quality
+                                $imageUrl = $image['url'];
+                                ?>
+                                <img src="<?= htmlspecialchars($imageUrl) ?>?v=<?= $image['modified'] ?>" 
+                                     alt="Featured <?= $index + 1 ?>" 
+                                     class="gallery-img"
+                                     loading="lazy">
+                                <div class="gallery-content">
+                                    <h5 class="fw-bold mb-2">
+                                        <?php
+                                        $titles = [
+                                            'Premium Collection',
+                                            'Behind the Scenes', 
+                                            'VIP Access'
+                                        ];
+                                        echo $titles[$index];
+                                        ?>
+                                    </h5>
+                                    <p class="mb-3">
+                                        <?php
+                                        $descriptions = [
+                                            'Exclusive content for subscribers',
+                                            'Get an inside look',
+                                            'For lifetime members only'
+                                        ];
+                                        echo $descriptions[$index];
+                                        ?>
+                                    </p>
+                                    <button class="btn-gradient btn-sm">
+                                        <i class="fas fa-unlock me-2"></i>Unlock
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <?php if (count($featuredImages) < 3): ?>
+                        <div class="text-center mt-4">
+                            <p class="text-muted">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Showing <?= count($featuredImages) ?> of 3 featured spots
+                            </p>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <!-- Fallback content when no images are uploaded -->
+                    <div class="gallery-fallback">
+                        <i class="fas fa-images"></i>
+                        <h4 class="mb-3">Coming Soon</h4>
+                        <p class="text-muted mb-4">
+                            3 exclusive featured images will be displayed here once uploaded. 
+                            Check back soon for premium TikTok-format content!
+                        </p>
+                        <button class="btn-gradient" onclick="switchToSignup()">
+                            <i class="fas fa-bell me-2"></i>Get Notified
                         </button>
                     </div>
-                </div>
-                
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=600&fit=crop" alt="Featured 2" class="gallery-img">
-                    <div class="gallery-content">
-                        <h5 class="fw-bold mb-2">Behind the Scenes</h5>
-                        <p class="mb-3">Get an inside look</p>
-                        <button class="btn-gradient btn-sm">
-                            <i class="fas fa-play me-2"></i>Watch
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=600&fit=crop" alt="Featured 3" class="gallery-img">
-                    <div class="gallery-content">
-                        <h5 class="fw-bold mb-2">VIP Access</h5>
-                        <p class="mb-3">For lifetime members only</p>
-                        <button class="btn-gradient btn-sm">
-                            <i class="fas fa-crown me-2"></i>Join VIP
-                        </button>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -1192,6 +1293,8 @@
                 document.getElementById('loading').classList.add('fade-out');
             }, 1000);
         });
+
+        // Gallery Toggle Functions - REMOVED
 
         // Auth Form Switching
         function switchToSignup() {
@@ -1463,12 +1566,16 @@
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', function() {
                 // Show subscription modal or redirect to signup
-                alert('Please sign up to view premium content!');
+                showToast('Please sign up to view premium content!', 'info');
                 switchToSignup();
             });
         });
 
-        console.log('🌟 Chloe Belle - Modern Homepage Loaded');
+        console.log('🌟 Chloe Belle - TikTok Optimized Homepage Loaded');
+        console.log('📊 Featured images loaded:', <?= count($featuredImages) ?>);
+        <?php if (!empty($featuredImages)): ?>
+        console.log('🖼️ Images:', <?= json_encode(array_column($featuredImages, 'filename')) ?>);
+        <?php endif; ?>
     </script>
 </body>
 </html>
