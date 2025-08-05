@@ -1,6 +1,6 @@
 <?php
 /**
- * Site Settings Page for Chloe Belle Admin
+ * Enhanced Site Settings Page for Chloe Belle Admin
  */
 
 session_start();
@@ -28,6 +28,24 @@ if ($_POST) {
             ]
         );
 
+        // Create settings table if it doesn't exist
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `site_settings` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `setting_key` varchar(100) NOT NULL UNIQUE,
+                `setting_value` text DEFAULT NULL,
+                `setting_type` enum('string','boolean','number','json') NOT NULL DEFAULT 'string',
+                `category` varchar(50) DEFAULT 'general',
+                `description` text DEFAULT NULL,
+                `is_public` tinyint(1) NOT NULL DEFAULT 0,
+                `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `idx_setting_key` (`setting_key`),
+                KEY `idx_category` (`category`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
         $action = $_POST['action'] ?? '';
 
         switch ($action) {
@@ -35,16 +53,18 @@ if ($_POST) {
                 $settings = [
                     'site_name' => $_POST['site_name'] ?? 'Chloe Belle',
                     'site_description' => $_POST['site_description'] ?? '',
+                    'site_tagline' => $_POST['site_tagline'] ?? '',
                     'default_currency' => $_POST['default_currency'] ?? 'GBP',
                     'default_language' => $_POST['default_language'] ?? 'en',
                     'registration_enabled' => isset($_POST['registration_enabled']) ? '1' : '0',
-                    'maintenance_mode' => isset($_POST['maintenance_mode']) ? '1' : '0'
+                    'maintenance_mode' => isset($_POST['maintenance_mode']) ? '1' : '0',
+                    'google_analytics_id' => $_POST['google_analytics_id'] ?? ''
                 ];
                 
                 foreach ($settings as $key => $value) {
                     $stmt = $pdo->prepare("
-                        INSERT INTO site_settings (setting_key, setting_value, setting_type) 
-                        VALUES (?, ?, 'string') 
+                        INSERT INTO site_settings (setting_key, setting_value, setting_type, category) 
+                        VALUES (?, ?, 'string', 'general') 
                         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
                     ");
                     $stmt->execute([$key, $value]);
@@ -62,13 +82,16 @@ if ($_POST) {
                     'subscription_yearly_price_usd' => $_POST['yearly_price_usd'] ?? '129.99',
                     'subscription_lifetime_price_gbp' => $_POST['lifetime_price_gbp'] ?? '299.99',
                     'subscription_lifetime_price_usd' => $_POST['lifetime_price_usd'] ?? '399.99',
-                    'free_posts_limit' => $_POST['free_posts_limit'] ?? '3'
+                    'free_posts_limit' => $_POST['free_posts_limit'] ?? '3',
+                    'trial_period_days' => $_POST['trial_period_days'] ?? '7',
+                    'stripe_publishable_key' => $_POST['stripe_publishable_key'] ?? '',
+                    'stripe_secret_key' => $_POST['stripe_secret_key'] ?? ''
                 ];
                 
                 foreach ($subscriptionSettings as $key => $value) {
                     $stmt = $pdo->prepare("
-                        INSERT INTO site_settings (setting_key, setting_value, setting_type) 
-                        VALUES (?, ?, 'string') 
+                        INSERT INTO site_settings (setting_key, setting_value, setting_type, category) 
+                        VALUES (?, ?, 'string', 'subscription') 
                         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
                     ");
                     $stmt->execute([$key, $value]);
@@ -85,19 +108,46 @@ if ($_POST) {
                     'likes_enabled' => isset($_POST['likes_enabled']) ? '1' : '0',
                     'blur_protection_enabled' => isset($_POST['blur_protection_enabled']) ? '1' : '0',
                     'watermark_enabled' => isset($_POST['watermark_enabled']) ? '1' : '0',
-                    'profanity_filter_enabled' => isset($_POST['profanity_filter_enabled']) ? '1' : '0'
+                    'profanity_filter_enabled' => isset($_POST['profanity_filter_enabled']) ? '1' : '0',
+                    'auto_publish_posts' => isset($_POST['auto_publish_posts']) ? '1' : '0',
+                    'max_post_length' => $_POST['max_post_length'] ?? '5000'
                 ];
                 
                 foreach ($contentSettings as $key => $value) {
                     $stmt = $pdo->prepare("
-                        INSERT INTO site_settings (setting_key, setting_value, setting_type) 
-                        VALUES (?, ?, 'boolean') 
+                        INSERT INTO site_settings (setting_key, setting_value, setting_type, category) 
+                        VALUES (?, ?, 'boolean', 'content') 
                         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), setting_type = 'boolean'
                     ");
                     $stmt->execute([$key, $value]);
                 }
                 
                 $message = "Content settings updated successfully!";
+                $messageType = 'success';
+                break;
+
+            case 'update_email':
+                $emailSettings = [
+                    'smtp_host' => $_POST['smtp_host'] ?? '',
+                    'smtp_port' => $_POST['smtp_port'] ?? '587',
+                    'smtp_username' => $_POST['smtp_username'] ?? '',
+                    'smtp_password' => $_POST['smtp_password'] ?? '',
+                    'smtp_encryption' => $_POST['smtp_encryption'] ?? 'tls',
+                    'from_email' => $_POST['from_email'] ?? '',
+                    'from_name' => $_POST['from_name'] ?? '',
+                    'welcome_email_enabled' => isset($_POST['welcome_email_enabled']) ? '1' : '0'
+                ];
+                
+                foreach ($emailSettings as $key => $value) {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO site_settings (setting_key, setting_value, setting_type, category) 
+                        VALUES (?, ?, 'string', 'email') 
+                        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+                    ");
+                    $stmt->execute([$key, $value]);
+                }
+                
+                $message = "Email settings updated successfully!";
                 $messageType = 'success';
                 break;
         }
@@ -135,6 +185,25 @@ function getSetting($key, $default = '') {
     global $settings;
     return $settings[$key] ?? $default;
 }
+
+// Get system information
+$systemInfo = [
+    'php_version' => PHP_VERSION,
+    'mysql_version' => 'Unknown',
+    'uploads_writable' => is_writable('../uploads'),
+    'config_writable' => is_writable('../config.php'),
+    'memory_limit' => ini_get('memory_limit'),
+    'max_execution_time' => ini_get('max_execution_time'),
+    'upload_max_filesize' => ini_get('upload_max_filesize'),
+    'debug_mode' => defined('DEBUG_MODE') && DEBUG_MODE
+];
+
+try {
+    $mysql_version = $pdo->query("SELECT VERSION() as version")->fetch()['version'];
+    $systemInfo['mysql_version'] = $mysql_version;
+} catch (Exception $e) {
+    // Ignore error
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -146,146 +215,503 @@ function getSetting($key, $default = '') {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #6c5ce7;
-            --sidebar-bg: #2d3436;
-            --sidebar-text: #ddd;
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        body { background: #f8f9fa; }
-        
-        .sidebar {
-            background: var(--sidebar-bg);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            width: 250px;
+        }
+
+        /* Sidebar Styles - Same as other pages */
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: var(--transition);
             z-index: 1000;
-            color: var(--sidebar-text);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
         }
-        
-        .sidebar .nav-link {
-            color: var(--sidebar-text);
-            padding: 12px 20px;
-            transition: all 0.3s;
+
+        .sidebar.show {
+            transform: translateX(0);
         }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: var(--primary-color);
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
         }
-        
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand:hover {
+            color: white;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
         .main-content {
-            margin-left: 250px;
-            padding: 20px;
+            margin-left: 0;
+            transition: var(--transition);
+            min-height: 100vh;
+            padding: 2rem;
         }
-        
-        .navbar-brand {
-            color: white !important;
-            font-weight: bold;
+
+        .main-content.sidebar-open {
+            margin-left: var(--sidebar-width);
         }
-        
-        .settings-section {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        /* Header */
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
             margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .settings-header {
-            background: var(--primary-color);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px 10px 0 0;
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
             margin: 0;
         }
-        
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* Settings Tabs */
+        .settings-tabs {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn.active,
+        .tab-btn:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        /* Settings Section */
+        .settings-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            display: none;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .section-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-body {
+            padding: 2rem;
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            outline: none;
+        }
+
+        .form-check {
+            margin-bottom: 1rem;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-text {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* System Info Cards */
+        .system-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-icon.php { color: #777bb4; }
+        .info-icon.mysql { color: #4479a1; }
+        .info-icon.storage { color: var(--success-color); }
+        .info-icon.debug { color: var(--warning-color); }
+
+        .info-value {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .status-ok {
+            color: var(--success-color);
+        }
+
+        .status-warning {
+            color: var(--warning-color);
+        }
+
+        .status-error {
+            color: var(--danger-color);
+        }
+
+        /* Mobile Styles */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
             .main-content {
+                padding: 1rem;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .section-body {
+                padding: 1.5rem;
+            }
+
+            .tab-nav {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                text-align: left;
+            }
+
+            .system-info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Mobile Toggle */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main-content.sidebar-open {
                 margin-left: 0;
             }
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
         }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="p-3">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-star me-2"></i>Chloe Belle Admin
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.php" class="sidebar-brand">
+                <i class="fas fa-crown"></i>
+                Chloe Belle Admin
             </a>
         </div>
-        
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="index.php">
-                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        <div class="sidebar-nav">
+            <div class="nav-item">
+                <a href="index.php" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="users.php">
-                    <i class="fas fa-users me-2"></i>Users
+            </div>
+            <div class="nav-item">
+                <a href="users.php" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Users
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="posts.php">
-                    <i class="fas fa-edit me-2"></i>Posts
+            </div>
+            <div class="nav-item">
+                <a href="posts.php" class="nav-link">
+                    <i class="fas fa-edit"></i>
+                    Posts
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="media.php">
-                    <i class="fas fa-images me-2"></i>Media
+            </div>
+            <div class="nav-item">
+                <a href="media.php" class="nav-link">
+                    <i class="fas fa-images"></i>
+                    Media
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="roles.php">
-                    <i class="fas fa-user-tag me-2"></i>Roles
+            </div>
+            <div class="nav-item">
+                <a href="roles.php" class="nav-link">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="subscriptions.php">
-                    <i class="fas fa-credit-card me-2"></i>Subscriptions
+            </div>
+            <div class="nav-item">
+                <a href="subscriptions.php" class="nav-link">
+                    <i class="fas fa-credit-card"></i>
+                    Subscriptions
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="settings.php">
-                    <i class="fas fa-cog me-2"></i>Settings
+            </div>
+            <div class="nav-item">
+                <a href="settings.php" class="nav-link active">
+                    <i class="fas fa-cog"></i>
+                    Settings
                 </a>
-            </li>
-            <li class="nav-item mt-4">
-                <a class="nav-link" href="../feed/index.php">
-                    <i class="fas fa-eye me-2"></i>View Site
+            </div>
+            <div class="nav-item" style="margin-top: 2rem;">
+                <a href="../feed/index.php" class="nav-link">
+                    <i class="fas fa-eye"></i>
+                    View Site
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../auth/logout.php">
-                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </div>
+            <div class="nav-item">
+                <a href="../auth/logout.php" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
                 </a>
-            </li>
-        </ul>
+            </div>
+        </div>
     </nav>
 
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Main Content -->
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="page-header fade-in-up">
             <div>
-                <h1>Site Settings</h1>
-                <p class="text-muted">Configure your website settings</p>
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle">Configure your website settings and preferences</p>
             </div>
-            <button class="btn btn-outline-secondary d-lg-none" id="sidebarToggle">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
+        </header>
 
         <?php if ($message): ?>
             <div class="alert alert-<?= $messageType ?> alert-dismissible fade show">
@@ -298,22 +724,51 @@ function getSetting($key, $default = '') {
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
+        <!-- Settings Tabs -->
+        <div class="settings-tabs fade-in-up">
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="general">
+                    <i class="fas fa-globe"></i>
+                    General
+                </button>
+                <button class="tab-btn" data-tab="subscription">
+                    <i class="fas fa-crown"></i>
+                    Subscriptions
+                </button>
+                <button class="tab-btn" data-tab="content">
+                    <i class="fas fa-shield-alt"></i>
+                    Content & Security
+                </button>
+                <button class="tab-btn" data-tab="email">
+                    <i class="fas fa-envelope"></i>
+                    Email
+                </button>
+                <button class="tab-btn" data-tab="system">
+                    <i class="fas fa-server"></i>
+                    System Info
+                </button>
+            </div>
+        </div>
+
         <!-- General Settings -->
-        <div class="settings-section">
-            <h5 class="settings-header">
-                <i class="fas fa-globe me-2"></i>General Settings
-            </h5>
-            <div class="p-4">
+        <div class="settings-section active fade-in-up" id="general">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-globe"></i>
+                    General Settings
+                </h2>
+            </div>
+            <div class="section-body">
                 <form method="POST">
                     <input type="hidden" name="action" value="update_general">
                     
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 form-group">
                             <label for="site_name" class="form-label">Site Name</label>
                             <input type="text" class="form-control" id="site_name" name="site_name" 
                                    value="<?= htmlspecialchars(getSetting('site_name', 'Chloe Belle')) ?>" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 form-group">
                             <label for="default_currency" class="form-label">Default Currency</label>
                             <select class="form-select" id="default_currency" name="default_currency">
                                 <option value="GBP" <?= getSetting('default_currency') === 'GBP' ? 'selected' : '' ?>>GBP (£)</option>
@@ -323,13 +778,21 @@ function getSetting($key, $default = '') {
                         </div>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="form-group">
                         <label for="site_description" class="form-label">Site Description</label>
                         <textarea class="form-control" id="site_description" name="site_description" rows="3"><?= htmlspecialchars(getSetting('site_description', 'Exclusive AI-generated content and experiences')) ?></textarea>
+                        <div class="form-text">This appears in search engine results and social media previews</div>
                     </div>
-                    
+
+                    <div class="form-group">
+                        <label for="site_tagline" class="form-label">Site Tagline</label>
+                        <input type="text" class="form-control" id="site_tagline" name="site_tagline" 
+                               value="<?= htmlspecialchars(getSetting('site_tagline', 'Premium Content & Exclusive Access')) ?>"
+                               placeholder="A short tagline for your site">
+                    </div>
+
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 form-group">
                             <label for="default_language" class="form-label">Default Language</label>
                             <select class="form-select" id="default_language" name="default_language">
                                 <option value="en" <?= getSetting('default_language') === 'en' ? 'selected' : '' ?>>English</option>
@@ -338,14 +801,26 @@ function getSetting($key, $default = '') {
                                 <option value="de" <?= getSetting('default_language') === 'de' ? 'selected' : '' ?>>German</option>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="form-check mt-4">
+                        <div class="col-md-6 form-group">
+                            <label for="google_analytics_id" class="form-label">Google Analytics ID</label>
+                            <input type="text" class="form-control" id="google_analytics_id" name="google_analytics_id" 
+                                   value="<?= htmlspecialchars(getSetting('google_analytics_id')) ?>"
+                                   placeholder="G-XXXXXXXXXX">
+                            <div class="form-text">Optional: For tracking website analytics</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="registration_enabled" name="registration_enabled" 
                                        <?= getSetting('registration_enabled', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="registration_enabled">
                                     Allow new user registrations
                                 </label>
                             </div>
+                        </div>
+                        <div class="col-md-6">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="maintenance_mode" name="maintenance_mode" 
                                        <?= getSetting('maintenance_mode', '0') === '1' ? 'checked' : '' ?>>
@@ -356,29 +831,31 @@ function getSetting($key, $default = '') {
                         </div>
                     </div>
                     
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save General Settings
-                        </button>
-                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Save General Settings
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- Subscription Settings -->
-        <div class="settings-section">
-            <h5 class="settings-header">
-                <i class="fas fa-crown me-2"></i>Subscription Settings
-            </h5>
-            <div class="p-4">
+        <div class="settings-section fade-in-up" id="subscription">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-crown"></i>
+                    Subscription Settings
+                </h2>
+            </div>
+            <div class="section-body">
                 <form method="POST">
                     <input type="hidden" name="action" value="update_subscription">
                     
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="mb-3">Monthly Subscription</h6>
+                            <h5 class="mb-3">Monthly Subscription</h5>
                             <div class="row">
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">GBP Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">£</span>
@@ -386,7 +863,7 @@ function getSetting($key, $default = '') {
                                                value="<?= htmlspecialchars(getSetting('subscription_monthly_price_gbp', '9.99')) ?>">
                                     </div>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">USD Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
@@ -398,9 +875,9 @@ function getSetting($key, $default = '') {
                         </div>
                         
                         <div class="col-md-6">
-                            <h6 class="mb-3">Yearly Subscription</h6>
+                            <h5 class="mb-3">Yearly Subscription</h5>
                             <div class="row">
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">GBP Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">£</span>
@@ -408,7 +885,7 @@ function getSetting($key, $default = '') {
                                                value="<?= htmlspecialchars(getSetting('subscription_yearly_price_gbp', '99.99')) ?>">
                                     </div>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">USD Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
@@ -422,9 +899,9 @@ function getSetting($key, $default = '') {
                     
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="mb-3">Lifetime Subscription</h6>
+                            <h5 class="mb-3">Lifetime Subscription</h5>
                             <div class="row">
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">GBP Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">£</span>
@@ -432,7 +909,7 @@ function getSetting($key, $default = '') {
                                                value="<?= htmlspecialchars(getSetting('subscription_lifetime_price_gbp', '299.99')) ?>">
                                     </div>
                                 </div>
-                                <div class="col-6 mb-3">
+                                <div class="col-6 form-group">
                                     <label class="form-label">USD Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
@@ -444,39 +921,62 @@ function getSetting($key, $default = '') {
                         </div>
                         
                         <div class="col-md-6">
-                            <h6 class="mb-3">Free Access Limits</h6>
-                            <div class="mb-3">
+                            <h5 class="mb-3">Free Access Limits</h5>
+                            <div class="form-group">
                                 <label class="form-label">Free posts per user</label>
                                 <input type="number" class="form-control" name="free_posts_limit" 
                                        value="<?= htmlspecialchars(getSetting('free_posts_limit', '3')) ?>" min="0">
                                 <div class="form-text">Number of premium posts free users can view</div>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Trial period (days)</label>
+                                <input type="number" class="form-control" name="trial_period_days" 
+                                       value="<?= htmlspecialchars(getSetting('trial_period_days', '7')) ?>" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Payment Gateway (Stripe)</h5>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">Stripe Publishable Key</label>
+                            <input type="text" class="form-control" name="stripe_publishable_key" 
+                                   value="<?= htmlspecialchars(getSetting('stripe_publishable_key')) ?>"
+                                   placeholder="pk_test_...">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">Stripe Secret Key</label>
+                            <input type="password" class="form-control" name="stripe_secret_key" 
+                                   value="<?= htmlspecialchars(getSetting('stripe_secret_key')) ?>"
+                                   placeholder="sk_test_...">
                         </div>
                     </div>
                     
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Subscription Settings
-                        </button>
-                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Save Subscription Settings
+                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- Content Settings -->
-        <div class="settings-section">
-            <h5 class="settings-header">
-                <i class="fas fa-shield-alt me-2"></i>Content & Security Settings
-            </h5>
-            <div class="p-4">
+        <!-- Content & Security Settings -->
+        <div class="settings-section fade-in-up" id="content">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Content & Security Settings
+                </h2>
+            </div>
+            <div class="section-body">
                 <form method="POST">
                     <input type="hidden" name="action" value="update_content">
                     
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="mb-3">Content Features</h6>
+                            <h5 class="mb-3">Content Features</h5>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="comments_enabled" name="comments_enabled" 
                                        <?= getSetting('comments_enabled', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="comments_enabled">
@@ -484,7 +984,7 @@ function getSetting($key, $default = '') {
                                 </label>
                             </div>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="comments_moderation" name="comments_moderation" 
                                        <?= getSetting('comments_moderation', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="comments_moderation">
@@ -492,19 +992,33 @@ function getSetting($key, $default = '') {
                                 </label>
                             </div>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="likes_enabled" name="likes_enabled" 
                                        <?= getSetting('likes_enabled', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="likes_enabled">
                                     <i class="fas fa-heart me-2"></i>Enable likes and reactions
                                 </label>
                             </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="auto_publish_posts" name="auto_publish_posts" 
+                                       <?= getSetting('auto_publish_posts', '0') === '1' ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="auto_publish_posts">
+                                    <i class="fas fa-paper-plane me-2"></i>Auto-publish new posts
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Maximum post length (characters)</label>
+                                <input type="number" class="form-control" name="max_post_length" 
+                                       value="<?= htmlspecialchars(getSetting('max_post_length', '5000')) ?>" min="100">
+                            </div>
                         </div>
                         
                         <div class="col-md-6">
-                            <h6 class="mb-3">Content Protection</h6>
+                            <h5 class="mb-3">Content Protection</h5>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="blur_protection_enabled" name="blur_protection_enabled" 
                                        <?= getSetting('blur_protection_enabled', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="blur_protection_enabled">
@@ -512,7 +1026,7 @@ function getSetting($key, $default = '') {
                                 </label>
                             </div>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="watermark_enabled" name="watermark_enabled" 
                                        <?= getSetting('watermark_enabled', '0') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="watermark_enabled">
@@ -520,7 +1034,7 @@ function getSetting($key, $default = '') {
                                 </label>
                             </div>
                             
-                            <div class="form-check mb-3">
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="profanity_filter_enabled" name="profanity_filter_enabled" 
                                        <?= getSetting('profanity_filter_enabled', '1') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="profanity_filter_enabled">
@@ -530,85 +1044,255 @@ function getSetting($key, $default = '') {
                         </div>
                     </div>
                     
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Content Settings
-                        </button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Save Content Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Email Settings -->
+        <div class="settings-section fade-in-up" id="email">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-envelope"></i>
+                    Email Settings
+                </h2>
+            </div>
+            <div class="section-body">
+                <form method="POST">
+                    <input type="hidden" name="action" value="update_email">
+                    
+                    <h5 class="mb-3">SMTP Configuration</h5>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">SMTP Host</label>
+                            <input type="text" class="form-control" name="smtp_host" 
+                                   value="<?= htmlspecialchars(getSetting('smtp_host')) ?>"
+                                   placeholder="smtp.gmail.com">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">SMTP Port</label>
+                            <input type="number" class="form-control" name="smtp_port" 
+                                   value="<?= htmlspecialchars(getSetting('smtp_port', '587')) ?>">
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">SMTP Username</label>
+                            <input type="text" class="form-control" name="smtp_username" 
+                                   value="<?= htmlspecialchars(getSetting('smtp_username')) ?>"
+                                   placeholder="your-email@domain.com">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">SMTP Password</label>
+                            <input type="password" class="form-control" name="smtp_password" 
+                                   value="<?= htmlspecialchars(getSetting('smtp_password')) ?>">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">Encryption</label>
+                            <select class="form-select" name="smtp_encryption">
+                                <option value="tls" <?= getSetting('smtp_encryption') === 'tls' ? 'selected' : '' ?>>TLS</option>
+                                <option value="ssl" <?= getSetting('smtp_encryption') === 'ssl' ? 'selected' : '' ?>>SSL</option>
+                                <option value="none" <?= getSetting('smtp_encryption') === 'none' ? 'selected' : '' ?>>None</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="welcome_email_enabled" name="welcome_email_enabled" 
+                                       <?= getSetting('welcome_email_enabled', '1') === '1' ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="welcome_email_enabled">
+                                    Send welcome emails to new users
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3">Email Headers</h5>
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">From Email</label>
+                            <input type="email" class="form-control" name="from_email" 
+                                   value="<?= htmlspecialchars(getSetting('from_email')) ?>"
+                                   placeholder="noreply@yourdomain.com">
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label class="form-label">From Name</label>
+                            <input type="text" class="form-control" name="from_name" 
+                                   value="<?= htmlspecialchars(getSetting('from_name', 'Chloe Belle')) ?>">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Save Email Settings
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- System Information -->
-        <div class="settings-section">
-            <h5 class="settings-header">
-                <i class="fas fa-info-circle me-2"></i>System Information
-            </h5>
-            <div class="p-4">
+        <div class="settings-section fade-in-up" id="system">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-server"></i>
+                    System Information
+                </h2>
+            </div>
+            <div class="section-body">
+                <div class="system-info-grid">
+                    <div class="info-card">
+                        <div class="info-icon php">
+                            <i class="fab fa-php"></i>
+                        </div>
+                        <div class="info-value"><?= $systemInfo['php_version'] ?></div>
+                        <div class="info-label">PHP Version</div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-icon mysql">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="info-value"><?= $systemInfo['mysql_version'] ?></div>
+                        <div class="info-label">MySQL Version</div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-icon storage <?= $systemInfo['uploads_writable'] ? 'status-ok' : 'status-error' ?>">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <div class="info-value <?= $systemInfo['uploads_writable'] ? 'status-ok' : 'status-error' ?>">
+                            <?= $systemInfo['uploads_writable'] ? 'Writable' : 'Not Writable' ?>
+                        </div>
+                        <div class="info-label">Upload Directory</div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-icon debug <?= $systemInfo['debug_mode'] ? 'status-warning' : 'status-ok' ?>">
+                            <i class="fas fa-bug"></i>
+                        </div>
+                        <div class="info-value <?= $systemInfo['debug_mode'] ? 'status-warning' : 'status-ok' ?>">
+                            <?= $systemInfo['debug_mode'] ? 'Enabled' : 'Disabled' ?>
+                        </div>
+                        <div class="info-label">Debug Mode</div>
+                    </div>
+                </div>
+
                 <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <i class="fas fa-code fa-2x text-primary mb-2"></i>
-                                <h6>PHP Version</h6>
-                                <span class="badge bg-info"><?= PHP_VERSION ?></span>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="info-card">
+                            <div class="info-value"><?= $systemInfo['memory_limit'] ?></div>
+                            <div class="info-label">Memory Limit</div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <i class="fas fa-database fa-2x text-success mb-2"></i>
-                                <h6>Database</h6>
-                                <span class="badge bg-success">Connected</span>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="info-card">
+                            <div class="info-value"><?= $systemInfo['max_execution_time'] ?>s</div>
+                            <div class="info-label">Max Execution Time</div>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <i class="fas fa-folder fa-2x text-<?= is_writable('../uploads') ? 'success' : 'danger' ?> mb-2"></i>
-                                <h6>Upload Directory</h6>
-                                <span class="badge bg-<?= is_writable('../uploads') ? 'success' : 'danger' ?>">
-                                    <?= is_writable('../uploads') ? 'Writable' : 'Not Writable' ?>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <i class="fas fa-shield-alt fa-2x text-<?= defined('DEBUG_MODE') && DEBUG_MODE ? 'warning' : 'success' ?> mb-2"></i>
-                                <h6>Debug Mode</h6>
-                                <span class="badge bg-<?= defined('DEBUG_MODE') && DEBUG_MODE ? 'warning' : 'success' ?>">
-                                    <?= defined('DEBUG_MODE') && DEBUG_MODE ? 'Enabled' : 'Disabled' ?>
-                                </span>
-                            </div>
+                    <div class="col-md-4">
+                        <div class="info-card">
+                            <div class="info-value"><?= $systemInfo['upload_max_filesize'] ?></div>
+                            <div class="info-label">Max Upload Size</div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="alert alert-info">
-                    <h6><i class="fas fa-lightbulb me-2"></i>Quick Tips:</h6>
+                    <h6><i class="fas fa-lightbulb me-2"></i>System Tips:</h6>
                     <ul class="mb-0">
                         <li>Regularly backup your database and uploaded files</li>
                         <li>Disable debug mode in production for security</li>
                         <li>Monitor your subscription pricing against competitors</li>
-                        <li>Test payment flows in sandbox mode before going live</li>
+                        <li>Test email configuration with a test message</li>
+                        <li>Keep PHP and MySQL versions updated for security</li>
                     </ul>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileToggle = document.getElementById('mobileToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+            
+            // Update toggle icon
+            const icon = mobileToggle.querySelector('i');
+            if (sidebar.classList.contains('show')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Event listeners
+        mobileToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Close sidebar when clicking nav links on mobile
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    toggleSidebar();
+                }
+            });
+        });
+
+        // Desktop sidebar toggle
+        if (window.innerWidth > 992) {
+            mainContent.classList.add('sidebar-open');
+            sidebar.classList.add('show');
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.add('show');
+                mainContent.classList.add('sidebar-open');
+                sidebarOverlay.classList.remove('show');
+                mobileToggle.querySelector('i').classList.remove('fa-times');
+                mobileToggle.querySelector('i').classList.add('fa-bars');
+            } else {
+                mainContent.classList.remove('sidebar-open');
+            }
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+                
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Show corresponding section
+                document.querySelectorAll('.settings-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+            });
         });
 
         // Maintenance mode warning
@@ -620,9 +1304,9 @@ function getSetting($key, $default = '') {
             }
         });
 
-        console.log('⚙️ Settings page loaded');
-        console.log('🏠 Site name:', '<?= getSetting('site_name', 'Chloe Belle') ?>');
-        console.log('💱 Default currency:', '<?= getSetting('default_currency', 'GBP') ?>');
+        console.log('🎉 Enhanced Settings page loaded!');
+        console.log('⚙️ System: PHP <?= $systemInfo['php_version'] ?>, MySQL <?= $systemInfo['mysql_version'] ?>');
+        console.log('📧 Email configured: <?= !empty(getSetting('smtp_host')) ? 'Yes' : 'No' ?>');
     </script>
 </body>
 </html>

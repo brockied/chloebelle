@@ -351,3 +351,118 @@ Stack trace:
 [04-Aug-2025 09:19:27 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
 [04-Aug-2025 09:19:28 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
 [04-Aug-2025 09:19:29 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:32 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:45 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:55:43 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:55:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:56:04 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:43 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:45 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:09:59 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:10 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:11 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:10 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:11 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:12 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:12 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:13 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:45 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:14 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:14:06 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:14:07 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:14:07 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:17:19 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:17:24 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:17:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:18:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:19:53 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:21:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 18:29:19 UTC] PHP Parse error:  syntax error, unexpected token "," in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 87
+[04-Aug-2025 18:29:20 UTC] PHP Parse error:  syntax error, unexpected token "," in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 87
+[04-Aug-2025 23:17:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:08 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:56 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:26:03 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:03 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:04 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:04 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:07 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17

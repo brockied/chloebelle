@@ -1,0 +1,84 @@
+[04-Aug-2025 10:43:32 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:43:36 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:43:45 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:50:23 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:50:27 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:50:31 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:50:46 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:256
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(256): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 256
+[04-Aug-2025 10:53:49 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:271
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(271): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 271
+[04-Aug-2025 10:53:52 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:271
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(271): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 271
+[04-Aug-2025 10:55:33 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:271
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(271): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 271
+[04-Aug-2025 10:56:55 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:271
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(271): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 271
+[04-Aug-2025 10:59:54 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:271
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(271): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 271
+[04-Aug-2025 11:05:11 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:272
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(272): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 272
+[04-Aug-2025 11:05:28 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/user/profile.php:272
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(272): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/user/profile.php(104): createAvatarThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/user/profile.php on line 272

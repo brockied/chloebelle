@@ -5,3 +5,11 @@
 [04-Aug-2025 08:59:17 UTC] Comments API called with: {"action":"load","post_id":1}
 [04-Aug-2025 08:59:20 UTC] Likes API called with: {"action":"toggle","post_id":1}
 [04-Aug-2025 08:59:22 UTC] Comments API called with: {"action":"create","post_id":1,"content":"This is a test comment created at 09:59:22"}
+[04-Aug-2025 10:22:31 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 10:22:31 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 17:48:19 UTC] Likes API called with: {"action":"toggle","post_id":"8"}
+[04-Aug-2025 17:48:30 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:03:59 UTC] Likes API called with: {"action":"toggle","post_id":"1"}
+[04-Aug-2025 18:04:02 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:04:09 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:04:14 UTC] Likes API called with: {"action":"toggle","post_id":"7"}

@@ -1,6 +1,6 @@
 <?php
 /**
- * Post Management Page for Chloe Belle Admin - BETTER ACTION MENU VERSION
+ * Enhanced Post Management Page for Chloe Belle Admin
  */
 
 session_start();
@@ -85,7 +85,7 @@ if ($_POST) {
 
 // Get posts with pagination
 $page = max(1, (int)($_GET['page'] ?? 1));
-$postsPerPage = 10;
+$postsPerPage = 12;
 $offset = ($page - 1) * $postsPerPage;
 $filter = $_GET['filter'] ?? 'all';
 
@@ -126,7 +126,8 @@ try {
 
     // Get posts
     $sql = "
-        SELECT p.*, u.username, u.role as user_role
+        SELECT p.*, u.username, u.role as user_role,
+               (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id AND c.status = 'approved') as comments_count
         FROM posts p
         JOIN users u ON p.user_id = u.id
         $whereClause
@@ -152,136 +153,560 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Management - Chloe Belle Admin</title>
+    <title>Posts Management - Chloe Belle Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #6c5ce7;
-            --sidebar-bg: #2d3436;
-            --sidebar-text: #ddd;
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        body { background: #f8f9fa; }
-        
-        .sidebar {
-            background: var(--sidebar-bg);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            width: 250px;
+        }
+
+        /* Sidebar Styles - Same as dashboard */
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: var(--transition);
             z-index: 1000;
-            color: var(--sidebar-text);
-        }
-        
-        .sidebar .nav-link {
-            color: var(--sidebar-text);
-            padding: 12px 20px;
-            transition: all 0.3s;
-        }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
-        
-        .navbar-brand {
-            color: white !important;
-            font-weight: bold;
-        }
-        
-        .post-card {
-            transition: transform 0.2s;
-            position: relative;
-        }
-        
-        .post-card:hover {
-            transform: translateY(-2px);
-        }
-        
-        .post-card:hover .action-buttons {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        
-        .premium-badge {
-            background: linear-gradient(45deg, #6c5ce7, #fd79a8);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
         }
 
-        /* Better Action Menu - Slide out buttons */
-        .action-buttons {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            opacity: 0;
-            transform: translateX(20px);
-            transition: all 0.3s ease;
+        .sidebar.show {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand:hover {
+            color: white;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            transition: var(--transition);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .main-content.sidebar-open {
+            margin-left: var(--sidebar-width);
+        }
+
+        /* Header */
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* Filters */
+        .filters-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: white;
+            color: var(--dark-color);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+        }
+
+        /* Posts Grid */
+        .posts-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 2rem;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            position: relative;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .post-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .post-card:hover .post-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .post-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .post-excerpt {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .post-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+
+        .status-published {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-draft {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+
+        .premium-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(45deg, var(--warning-color), #d97706);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .post-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Action Menu */
+        .post-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition);
             z-index: 10;
         }
 
-        .action-btn {
+        .actions-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid rgba(0, 0, 0, 0.1);
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .actions-toggle:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05);
+        }
+
+        .actions-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            min-width: 160px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: var(--transition);
+            z-index: 1000;
+            margin-top: 0.5rem;
+        }
+
+        .actions-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--dark-color);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .action-item:hover {
+            background: #f8fafc;
+        }
+
+        .action-item.view:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+        }
+
+        .action-item.edit:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .action-item.delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        /* Action Buttons */
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--dark-color);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
         .action-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .action-btn.view { color: #007bff; }
-        .action-btn.edit { color: #28a745; }
-        .action-btn.unpublish { color: #ffc107; }
-        .action-btn.delete { color: #dc3545; }
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
 
-        .action-btn:hover.view { background: #007bff; color: white; }
-        .action-btn:hover.edit { background: #28a745; color: white; }
-        .action-btn:hover.unpublish { background: #ffc107; color: white; }
-        .action-btn:hover.delete { background: #dc3545; color: white; }
+            .page-header {
+                padding: 1.5rem;
+            }
 
-        /* Action panel alternative */
-        .action-panel {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 10px;
+            .posts-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .post-actions {
+                opacity: 1;
+                transform: translateY(0);
+                position: static;
+                margin-top: 1rem;
+                display: flex;
+                justify-content: center;
+            }
+
+            .actions-menu {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                display: none;
+                margin-top: 0;
+            }
+
+            .actions-menu.show {
+                display: block;
+            }
+        }
+
+        /* Mobile Toggle */
+        .mobile-toggle {
             display: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transition: var(--transition);
         }
 
-        .action-panel.show {
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main-content.sidebar-open {
+                margin-left: 0;
+            }
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
             display: block;
-            animation: slideDown 0.3s ease;
         }
 
-        @keyframes slideDown {
+        /* Pagination */
+        .pagination {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .page-link {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--dark-color);
+            padding: 0.75rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .page-link:hover,
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state h3 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -289,124 +714,102 @@ try {
             }
         }
 
-        .action-toggle {
-            background: none;
-            border: none;
-            color: #6c757d;
-            font-size: 1.2rem;
-            padding: 5px;
-            border-radius: 5px;
-            transition: all 0.2s ease;
-        }
-
-        .action-toggle:hover {
-            background: rgba(108, 92, 231, 0.1);
-            color: var(--primary-color);
-        }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
-
-            .action-buttons {
-                opacity: 1;
-                transform: translateX(0);
-                position: static;
-                flex-direction: row;
-                justify-content: center;
-                margin-top: 10px;
-            }
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out;
         }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="p-3">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-star me-2"></i>Chloe Belle Admin
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.php" class="sidebar-brand">
+                <i class="fas fa-crown"></i>
+                Chloe Belle Admin
             </a>
         </div>
-        
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="index.php">
-                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        <div class="sidebar-nav">
+            <div class="nav-item">
+                <a href="index.php" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
                 </a>
-            </li>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="users.php">
-                    <i class="fas fa-users me-2"></i>Users
-                </a>
-            </li>
-            <?php endif; ?>
-            <li class="nav-item">
-                <a class="nav-link active" href="posts.php">
-                    <i class="fas fa-edit me-2"></i>Posts
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="media.php">
-                    <i class="fas fa-images me-2"></i>Media
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="roles.php">
-                    <i class="fas fa-user-tag me-2"></i>Roles
-                </a>
-            </li>
-            <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="subscriptions.php">
-                    <i class="fas fa-credit-card me-2"></i>Subscriptions
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="settings.php">
-                    <i class="fas fa-cog me-2"></i>Settings
-                </a>
-            </li>
-            <?php endif; ?>
-            <li class="nav-item mt-4">
-                <a class="nav-link" href="../feed/index.php">
-                    <i class="fas fa-eye me-2"></i>View Site
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../auth/logout.php">
-                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1>Post Management</h1>
-                <p class="text-muted">Create and manage posts</p>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                    <i class="fas fa-plus me-2"></i>New Post
-                </button>
-                <button class="btn btn-outline-secondary d-lg-none" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+            <div class="nav-item">
+                <a href="users.php" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Users
+                </a>
+            </div>
+            <?php endif; ?>
+            <div class="nav-item">
+                <a href="posts.php" class="nav-link active">
+                    <i class="fas fa-edit"></i>
+                    Posts
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="media.php" class="nav-link">
+                    <i class="fas fa-images"></i>
+                    Media
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="roles.php" class="nav-link">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
+                </a>
+            </div>
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+            <div class="nav-item">
+                <a href="subscriptions.php" class="nav-link">
+                    <i class="fas fa-credit-card"></i>
+                    Subscriptions
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="settings.php" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </a>
+            </div>
+            <?php endif; ?>
+            <div class="nav-item" style="margin-top: 2rem;">
+                <a href="../feed/index.php" class="nav-link">
+                    <i class="fas fa-eye"></i>
+                    View Site
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="../auth/logout.php" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
             </div>
         </div>
+    </nav>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="page-header fade-in-up">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="page-title">Posts Management</h1>
+                    <p class="page-subtitle">Create, edit, and manage all your content</p>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-plus"></i>
+                        New Post
+                    </button>
+                </div>
+            </div>
+        </header>
 
         <?php if ($message): ?>
             <div class="alert alert-<?= $messageType ?> alert-dismissible fade show">
@@ -420,193 +823,148 @@ try {
         <?php endif; ?>
 
         <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="btn-group" role="group">
-                            <a href="?filter=all" class="btn btn-<?= $filter === 'all' ? 'primary' : 'outline-primary' ?>">
-                                All Posts
-                            </a>
-                            <a href="?filter=published" class="btn btn-<?= $filter === 'published' ? 'primary' : 'outline-primary' ?>">
-                                Published
-                            </a>
-                            <a href="?filter=draft" class="btn btn-<?= $filter === 'draft' ? 'primary' : 'outline-primary' ?>">
-                                Drafts
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <span class="text-muted">
-                            Showing <?= count($posts) ?> of <?= $totalPosts ?> posts
-                        </span>
-                    </div>
+        <div class="filters-container fade-in-up">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <a href="?filter=all" class="filter-btn <?= $filter === 'all' ? 'active' : '' ?>">
+                        All Posts
+                    </a>
+                    <a href="?filter=published" class="filter-btn <?= $filter === 'published' ? 'active' : '' ?>">
+                        Published
+                    </a>
+                    <a href="?filter=draft" class="filter-btn <?= $filter === 'draft' ? 'active' : '' ?>">
+                        Drafts
+                    </a>
                 </div>
+                <span class="text-muted">
+                    <?= count($posts) ?> of <?= $totalPosts ?> posts
+                </span>
             </div>
         </div>
 
-        <!-- Posts -->
+        <!-- Posts Grid -->
         <?php if (empty($posts)): ?>
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-edit fa-3x text-muted mb-3"></i>
-                    <h5>No posts found</h5>
-                    <p class="text-muted">Create your first post to get started!</p>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
-                        <i class="fas fa-plus me-2"></i>Create Post
+            <div class="posts-container fade-in-up">
+                <div class="empty-state">
+                    <i class="fas fa-edit"></i>
+                    <h3>No posts found</h3>
+                    <p>Create your first post to get started!</p>
+                    <button class="action-btn primary" data-bs-toggle="modal" data-bs-target="#createPostModal">
+                        <i class="fas fa-plus"></i>
+                        Create Post
                     </button>
                 </div>
             </div>
         <?php else: ?>
-            <div class="row">
-                <?php foreach ($posts as $post): ?>
-                <div class="col-lg-6 mb-4">
-                    <div class="card post-card h-100">
-                        <!-- Hover Action Buttons -->
-                        <div class="action-buttons">
-                            <a href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank" 
-                               class="action-btn view" title="View Post">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            
-                            <?php if ($post['status'] === 'draft'): ?>
+            <div class="posts-container fade-in-up">
+                <div class="posts-grid">
+                    <?php foreach ($posts as $post): ?>
+                    <article class="post-card">
+                        <?php if ($post['is_premium']): ?>
+                            <div class="premium-badge">
+                                <i class="fas fa-crown me-1"></i>Premium
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="post-actions">
+                            <div class="actions-toggle" onclick="toggleActions(<?= $post['id'] ?>)">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </div>
+                            <div class="actions-menu" id="actionsMenu<?= $post['id'] ?>">
+                                <a href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank" class="action-item view">
+                                    <i class="fas fa-eye"></i>
+                                    View Post
+                                </a>
+                                
+                                <?php if ($post['status'] === 'draft'): ?>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="update_status">
+                                        <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                        <input type="hidden" name="status" value="published">
+                                        <button type="submit" class="action-item edit">
+                                            <i class="fas fa-check"></i>
+                                            Publish
+                                        </button>
+                                    </form>
+                                <?php else: ?>
+                                    <form method="POST" class="d-inline">
+                                        <input type="hidden" name="action" value="update_status">
+                                        <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
+                                        <input type="hidden" name="status" value="draft">
+                                        <button type="submit" class="action-item edit">
+                                            <i class="fas fa-edit"></i>
+                                            Make Draft
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                
                                 <form method="POST" class="d-inline">
-                                    <input type="hidden" name="action" value="update_status">
+                                    <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                    <input type="hidden" name="status" value="published">
-                                    <button type="submit" class="action-btn edit" title="Publish Post">
-                                        <i class="fas fa-check"></i>
+                                    <button type="submit" class="action-item delete"
+                                            onclick="return confirm('Delete this post permanently?')">
+                                        <i class="fas fa-trash"></i>
+                                        Delete
                                     </button>
                                 </form>
-                            <?php else: ?>
-                                <form method="POST" class="d-inline">
-                                    <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                    <input type="hidden" name="status" value="draft">
-                                    <button type="submit" class="action-btn unpublish" title="Unpublish Post">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                            
-                            <form method="POST" class="d-inline">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                <button type="submit" class="action-btn delete" title="Delete Post"
-                                        onclick="return confirm('Delete this post permanently?')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                            </div>
                         </div>
 
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div class="flex-grow-1">
-                                    <h6 class="card-title mb-1">
-                                        <?= $post['title'] ? htmlspecialchars($post['title']) : 'Untitled Post' ?>
-                                        <?php if ($post['featured']): ?>
-                                            <i class="fas fa-star text-warning ms-1" title="Featured"></i>
-                                        <?php endif; ?>
-                                    </h6>
-                                    <small class="text-muted">
-                                        by <?= htmlspecialchars($post['username']) ?>
-                                        <?php if ($post['user_role'] === 'chloe'): ?>
-                                            <i class="fas fa-star text-warning" title="Chloe Belle"></i>
-                                        <?php endif; ?>
-                                    </small>
-                                </div>
-                                <div class="d-flex flex-column align-items-end">
-                                    <?php if ($post['is_premium']): ?>
-                                        <span class="premium-badge mb-1">Premium</span>
+                        <div class="post-content">
+                            <div class="post-header">
+                                <h3 class="post-title">
+                                    <?= $post['title'] ? htmlspecialchars($post['title']) : 'Untitled Post' ?>
+                                    <?php if ($post['featured']): ?>
+                                        <i class="fas fa-star text-warning ms-1" title="Featured"></i>
                                     <?php endif; ?>
-                                    <span class="badge bg-<?= $post['status'] === 'published' ? 'success' : ($post['status'] === 'draft' ? 'secondary' : 'warning') ?>">
-                                        <?= ucfirst($post['status']) ?>
-                                    </span>
-                                </div>
+                                </h3>
                             </div>
                             
-                            <p class="card-text">
+                            <p class="post-excerpt">
                                 <?= nl2br(htmlspecialchars(substr($post['content'], 0, 150))) ?>
                                 <?= strlen($post['content']) > 150 ? '...' : '' ?>
                             </p>
                             
-                            <div class="row text-center mb-3">
-                                <div class="col-4">
-                                    <small class="text-muted">
-                                        <i class="fas fa-eye"></i> <?= $post['views'] ?>
-                                    </small>
-                                </div>
-                                <div class="col-4">
-                                    <small class="text-muted">
-                                        <i class="fas fa-heart"></i> <?= $post['likes'] ?>
-                                    </small>
-                                </div>
-                                <div class="col-4">
-                                    <small class="text-muted">
-                                        <i class="fas fa-comment"></i> <?= $post['comments_count'] ?>
-                                    </small>
-                                </div>
+                            <div class="post-meta">
+                                <span class="post-status status-<?= $post['status'] ?>">
+                                    <?= ucfirst($post['status']) ?>
+                                </span>
+                                <small class="text-muted">
+                                    by <?= htmlspecialchars($post['username']) ?>
+                                    <?php if ($post['user_role'] === 'chloe'): ?>
+                                        <i class="fas fa-star text-warning" title="Chloe Belle"></i>
+                                    <?php endif; ?>
+                                </small>
                             </div>
                             
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <?= date('M j, Y g:i A', strtotime($post['created_at'])) ?>
-                                </small>
-                                
-                                <!-- Action Panel Toggle (Alternative to hover buttons) -->
-                                <button class="action-toggle d-md-none" onclick="toggleActionPanel(<?= $post['id'] ?>)">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                            </div>
-
-                            <!-- Mobile Action Panel -->
-                            <div class="action-panel" id="actionPanel<?= $post['id'] ?>">
-                                <div class="d-flex gap-2 justify-content-center">
-                                    <a href="../feed/post.php?id=<?= $post['id'] ?>" target="_blank" 
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    
-                                    <?php if ($post['status'] === 'draft'): ?>
-                                        <form method="POST" class="d-inline">
-                                            <input type="hidden" name="action" value="update_status">
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="status" value="published">
-                                            <button type="submit" class="btn btn-sm btn-outline-success">
-                                                <i class="fas fa-check"></i> Publish
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <form method="POST" class="d-inline">
-                                            <input type="hidden" name="action" value="update_status">
-                                            <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                            <input type="hidden" name="status" value="draft">
-                                            <button type="submit" class="btn btn-sm btn-outline-warning">
-                                                <i class="fas fa-edit"></i> Draft
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                    
-                                    <form method="POST" class="d-inline">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="post_id" value="<?= $post['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Delete this post permanently?')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
+                            <div class="post-stats">
+                                <div class="post-stat">
+                                    <i class="fas fa-eye"></i>
+                                    <span><?= number_format($post['views']) ?></span>
+                                </div>
+                                <div class="post-stat">
+                                    <i class="fas fa-heart"></i>
+                                    <span><?= number_format($post['likes']) ?></span>
+                                </div>
+                                <div class="post-stat">
+                                    <i class="fas fa-comment"></i>
+                                    <span><?= number_format($post['comments_count']) ?></span>
+                                </div>
+                                <div class="post-stat">
+                                    <i class="fas fa-clock"></i>
+                                    <span><?= date('M j, Y', strtotime($post['created_at'])) ?></span>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </article>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
             </div>
 
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
-                <nav aria-label="Posts pagination" class="mt-4">
-                    <ul class="pagination justify-content-center">
+                <nav aria-label="Posts pagination" class="pagination fade-in-up">
+                    <ul class="pagination justify-content-center mb-0">
                         <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                             <a class="page-link" href="?page=<?= max(1, $page - 1) ?>&filter=<?= $filter ?>">Previous</a>
                         </li>
@@ -624,7 +982,12 @@ try {
                 </nav>
             <?php endif; ?>
         <?php endif; ?>
-    </div>
+    </main>
+
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
     <!-- Create Post Modal -->
     <div class="modal fade" id="createPostModal" tabindex="-1">
@@ -692,9 +1055,82 @@ try {
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle')?.addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileToggle = document.getElementById('mobileToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+            
+            // Update toggle icon
+            const icon = mobileToggle.querySelector('i');
+            if (sidebar.classList.contains('show')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Event listeners
+        mobileToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Close sidebar when clicking nav links on mobile
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    toggleSidebar();
+                }
+            });
+        });
+
+        // Desktop sidebar toggle
+        if (window.innerWidth > 992) {
+            mainContent.classList.add('sidebar-open');
+            sidebar.classList.add('show');
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.add('show');
+                mainContent.classList.add('sidebar-open');
+                sidebarOverlay.classList.remove('show');
+                mobileToggle.querySelector('i').classList.remove('fa-times');
+                mobileToggle.querySelector('i').classList.add('fa-bars');
+            } else {
+                mainContent.classList.remove('sidebar-open');
+            }
+        });
+
+        // Actions menu functionality
+        function toggleActions(postId) {
+            const menu = document.getElementById(`actionsMenu${postId}`);
+            const allMenus = document.querySelectorAll('.actions-menu');
+            
+            // Close all other menus
+            allMenus.forEach(m => {
+                if (m !== menu) {
+                    m.classList.remove('show');
+                }
+            });
+            
+            // Toggle current menu
+            menu.classList.toggle('show');
+        }
+
+        // Close action menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.post-actions')) {
+                document.querySelectorAll('.actions-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
         });
 
         // Show/hide subscription options based on premium checkbox
@@ -707,32 +1143,9 @@ try {
             }
         });
 
-        // Toggle action panel for mobile
-        function toggleActionPanel(postId) {
-            const panel = document.getElementById('actionPanel' + postId);
-            
-            // Close all other panels first
-            document.querySelectorAll('.action-panel').forEach(p => {
-                if (p.id !== 'actionPanel' + postId) {
-                    p.classList.remove('show');
-                }
-            });
-            
-            // Toggle current panel
-            panel.classList.toggle('show');
-        }
-
-        // Close action panels when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.action-toggle') && !e.target.closest('.action-panel')) {
-                document.querySelectorAll('.action-panel').forEach(panel => {
-                    panel.classList.remove('show');
-                });
-            }
-        });
-
-        console.log('📝 Post Management loaded with better action menu');
-        console.log('📊 Total posts: <?= $totalPosts ?>');
+        console.log('🎉 Enhanced Posts Management loaded!');
+        console.log('📝 Total posts: <?= $totalPosts ?>');
+        console.log('✨ Modern design with improved UX');
     </script>
 </body>
 </html>

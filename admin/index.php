@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Dashboard for Chloe Belle Website - CLEAN VERSION
+ * Enhanced Admin Dashboard for Chloe Belle Website
  */
 
 session_start();
@@ -48,7 +48,11 @@ try {
     // Content engagement
     $stats['total_views'] = $pdo->query("SELECT COALESCE(SUM(views), 0) FROM posts")->fetchColumn();
     $stats['total_likes'] = $pdo->query("SELECT COALESCE(SUM(likes), 0) FROM posts")->fetchColumn();
-    $stats['total_comments'] = $pdo->query("SELECT COUNT(*) FROM comments WHERE status = 'approved'")->fetchColumn();
+    $stats['total_comments'] = $pdo->query("SELECT COUNT(*) FROM comments WHERE status = 'approved'")->fetchColumn() ?: 0;
+
+    // Calculate growth percentages
+    $stats['user_growth'] = $stats['total_users'] > 0 ? round(($stats['new_users_week'] / $stats['total_users']) * 100, 1) : 0;
+    $stats['subscriber_conversion'] = $stats['total_users'] > 0 ? round(($stats['total_subscribers'] / $stats['total_users']) * 100, 1) : 0;
 
     // Recent activity
     $recent_users = $pdo->query("
@@ -73,7 +77,7 @@ try {
         'total_users', 'active_users', 'new_users_today', 'new_users_week',
         'total_posts', 'published_posts', 'draft_posts', 'premium_posts',
         'total_subscribers', 'monthly_subscribers', 'yearly_subscribers', 'lifetime_subscribers',
-        'total_views', 'total_likes', 'total_comments'
+        'total_views', 'total_likes', 'total_comments', 'user_growth', 'subscriber_conversion'
     ], 0);
     $recent_users = [];
     $recent_posts = [];
@@ -100,421 +104,734 @@ function timeAgo($datetime) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #6c5ce7;
-            --sidebar-bg: #2d3436;
-            --sidebar-text: #ddd;
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        body { 
-            background: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .sidebar {
-            background: var(--sidebar-bg);
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            width: 250px;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateX(-100%);
+            transition: var(--transition);
             z-index: 1000;
-            color: var(--sidebar-text);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
         }
-        
-        .sidebar .nav-link {
-            color: var(--sidebar-text);
-            padding: 12px 20px;
-            transition: all 0.3s;
+
+        .sidebar.show {
+            transform: translateX(0);
         }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: var(--primary-color);
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
         }
-        
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-brand:hover {
+            color: white;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
         .main-content {
-            margin-left: 250px;
-            padding: 20px;
+            margin-left: 0;
+            transition: var(--transition);
+            min-height: 100vh;
+            padding: 2rem;
         }
-        
-        .navbar-brand {
-            color: white !important;
-            font-weight: bold;
+
+        .main-content.sidebar-open {
+            margin-left: var(--sidebar-width);
         }
-        
+
+        /* Header */
+        .welcome-banner {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+        }
+
+        .welcome-subtitle {
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
         .stat-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease;
-            border-left: 4px solid var(--primary-color);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
-        
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
         .stat-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-8px);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
         }
-        
-        .stat-number {
+
+        .stat-card.users::before { background: linear-gradient(135deg, var(--info-color), #1d4ed8); }
+        .stat-card.posts::before { background: linear-gradient(135deg, var(--success-color), #059669); }
+        .stat-card.subscribers::before { background: linear-gradient(135deg, var(--warning-color), #d97706); }
+        .stat-card.engagement::before { background: linear-gradient(135deg, var(--danger-color), #dc2626); }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.users { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .stat-icon.posts { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .stat-icon.subscribers { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .stat-icon.engagement { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+
+        .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
-            margin-bottom: 0;
+            color: var(--dark-color);
+            line-height: 1;
+            margin-bottom: 0.5rem;
         }
-        
+
         .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
         }
-        
-        .stat-icon {
-            font-size: 2rem;
-            opacity: 0.7;
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
-        
-        .activity-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
+
+        .stat-change.positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
         }
-        
-        .activity-header {
-            background: linear-gradient(135deg, var(--primary-color), #a29bfe);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 15px 15px 0 0;
-            margin-bottom: 0;
+
+        .stat-change.neutral {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
         }
-        
+
+        /* Activity Section */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .activity-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f1f3f4;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
         }
-        
+
         .activity-item:hover {
-            background-color: #f8f9fa;
+            background: rgba(99, 102, 241, 0.05);
+            margin: 0 -1rem;
+            padding: 1rem;
+            border-radius: 12px;
         }
-        
+
         .activity-item:last-child {
             border-bottom: none;
         }
-        
-        .welcome-banner {
-            background: linear-gradient(135deg, var(--primary-color), #a29bfe);
-            color: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
         }
-        
+
+        .activity-icon.post { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .activity-icon.user { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .activity-icon.subscription { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .activity-time {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            color: var(--dark-color);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Mobile Styles */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
             .main-content {
+                padding: 1rem;
+            }
+
+            .welcome-banner {
+                padding: 1.5rem;
+            }
+
+            .welcome-title {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Mobile Toggle */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main-content.sidebar-open {
                 margin-left: 0;
             }
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .fade-in-delay {
+            animation: fadeIn 0.6s ease-out 0.2s both;
         }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="p-3">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-star me-2"></i>Chloe Belle Admin
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.php" class="sidebar-brand">
+                <i class="fas fa-crown"></i>
+                Chloe Belle Admin
             </a>
         </div>
-        
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link active" href="index.php">
-                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        <div class="sidebar-nav">
+            <div class="nav-item">
+                <a href="index.php" class="nav-link active">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
                 </a>
-            </li>
+            </div>
             <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="users.php">
-                    <i class="fas fa-users me-2"></i>Users
+            <div class="nav-item">
+                <a href="users.php" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Users
                 </a>
-            </li>
+            </div>
             <?php endif; ?>
-            <li class="nav-item">
-                <a class="nav-link" href="posts.php">
-                    <i class="fas fa-edit me-2"></i>Posts
+            <div class="nav-item">
+                <a href="posts.php" class="nav-link">
+                    <i class="fas fa-edit"></i>
+                    Posts
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="media.php">
-                    <i class="fas fa-images me-2"></i>Media
+            </div>
+            <div class="nav-item">
+                <a href="media.php" class="nav-link">
+                    <i class="fas fa-images"></i>
+                    Media
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="roles.php">
-                    <i class="fas fa-user-tag me-2"></i>Roles
+            </div>
+            <div class="nav-item">
+                <a href="roles.php" class="nav-link">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
                 </a>
-            </li>
+            </div>
             <?php if ($_SESSION['role'] === 'admin'): ?>
-            <li class="nav-item">
-                <a class="nav-link" href="subscriptions.php">
-                    <i class="fas fa-credit-card me-2"></i>Subscriptions
+            <div class="nav-item">
+                <a href="subscriptions.php" class="nav-link">
+                    <i class="fas fa-credit-card"></i>
+                    Subscriptions
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="settings.php">
-                    <i class="fas fa-cog me-2"></i>Settings
+            </div>
+            <div class="nav-item">
+                <a href="settings.php" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    Settings
                 </a>
-            </li>
+            </div>
             <?php endif; ?>
-            <li class="nav-item mt-4">
-                <a class="nav-link" href="../feed/index.php">
-                    <i class="fas fa-eye me-2"></i>View Site
+            <div class="nav-item" style="margin-top: 2rem;">
+                <a href="../feed/index.php" class="nav-link">
+                    <i class="fas fa-eye"></i>
+                    View Site
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../auth/logout.php">
-                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </div>
+            <div class="nav-item">
+                <a href="../auth/logout.php" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
                 </a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-2">Welcome back, <?php echo htmlspecialchars($_SESSION['username']); ?>! 👋</h1>
-                    <p class="mb-0 opacity-75">Here's what's happening with your Chloe Belle platform today.</p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <button class="btn btn-outline-light d-lg-none" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                </div>
             </div>
         </div>
+    </nav>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Welcome Banner -->
+        <header class="welcome-banner fade-in">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="welcome-title">Welcome back, <?= htmlspecialchars($_SESSION['username']) ?>! 👋</h1>
+                    <p class="welcome-subtitle">Here's what's happening with your Chloe Belle platform today.</p>
+                </div>
+            </div>
+        </header>
 
         <?php if (isset($error)): ?>
-            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <div class="alert alert-danger fade-in"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <!-- Statistics Cards -->
-        <div class="row">
-            <!-- User Stats -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number text-primary"><?php echo number_format($stats['total_users']); ?></div>
-                            <div class="stat-label">Total Users</div>
-                            <small class="text-muted">
-                                <i class="fas fa-arrow-up text-success"></i>
-                                <?php echo $stats['new_users_week']; ?> this week
-                            </small>
-                        </div>
-                        <div class="stat-icon text-primary">
-                            <i class="fas fa-users"></i>
-                        </div>
+        <!-- Stats Grid -->
+        <div class="stats-grid fade-in-delay">
+            <div class="stat-card users">
+                <div class="stat-header">
+                    <div class="stat-icon users">
+                        <i class="fas fa-users"></i>
                     </div>
+                </div>
+                <div class="stat-value"><?= number_format($stats['total_users']) ?></div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-change <?= $stats['user_growth'] > 0 ? 'positive' : 'neutral' ?>">
+                    <i class="fas fa-arrow-up"></i>
+                    +<?= $stats['user_growth'] ?>% growth
                 </div>
             </div>
 
-            <!-- Posts Stats -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number text-success"><?php echo number_format($stats['total_posts']); ?></div>
-                            <div class="stat-label">Total Posts</div>
-                            <small class="text-muted">
-                                <?php echo $stats['published_posts']; ?> published
-                            </small>
-                        </div>
-                        <div class="stat-icon text-success">
-                            <i class="fas fa-edit"></i>
-                        </div>
+            <div class="stat-card posts">
+                <div class="stat-header">
+                    <div class="stat-icon posts">
+                        <i class="fas fa-edit"></i>
                     </div>
+                </div>
+                <div class="stat-value"><?= number_format($stats['total_posts']) ?></div>
+                <div class="stat-label">Total Posts</div>
+                <div class="stat-change neutral">
+                    <i class="fas fa-check"></i>
+                    <?= $stats['published_posts'] ?> published
                 </div>
             </div>
 
-            <!-- Subscribers Stats -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number text-warning"><?php echo number_format($stats['total_subscribers']); ?></div>
-                            <div class="stat-label">Subscribers</div>
-                            <small class="text-muted">
-                                <?php echo round($stats['total_users'] > 0 ? ($stats['total_subscribers'] / $stats['total_users']) * 100 : 0, 1); ?>% conversion
-                            </small>
-                        </div>
-                        <div class="stat-icon text-warning">
-                            <i class="fas fa-crown"></i>
-                        </div>
+            <div class="stat-card subscribers">
+                <div class="stat-header">
+                    <div class="stat-icon subscribers">
+                        <i class="fas fa-crown"></i>
                     </div>
+                </div>
+                <div class="stat-value"><?= number_format($stats['total_subscribers']) ?></div>
+                <div class="stat-label">Premium Subscribers</div>
+                <div class="stat-change positive">
+                    <i class="fas fa-percentage"></i>
+                    <?= $stats['subscriber_conversion'] ?>% conversion
                 </div>
             </div>
 
-            <!-- Engagement Stats -->
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="stat-number text-info"><?php echo number_format($stats['total_views']); ?></div>
-                            <div class="stat-label">Total Views</div>
-                            <small class="text-muted">
-                                <?php echo number_format($stats['total_likes']); ?> likes
-                            </small>
-                        </div>
-                        <div class="stat-icon text-info">
-                            <i class="fas fa-heart"></i>
-                        </div>
+            <div class="stat-card engagement">
+                <div class="stat-header">
+                    <div class="stat-icon engagement">
+                        <i class="fas fa-heart"></i>
                     </div>
+                </div>
+                <div class="stat-value"><?= number_format($stats['total_views']) ?></div>
+                <div class="stat-label">Total Views</div>
+                <div class="stat-change neutral">
+                    <i class="fas fa-thumbs-up"></i>
+                    <?= number_format($stats['total_likes']) ?> likes
                 </div>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="row">
-            <div class="col-12">
-                <div class="activity-card">
-                    <h6 class="activity-header">
-                        <i class="fas fa-bolt me-2"></i>Quick Actions
-                    </h6>
-                    <div class="p-3">
-                        <div class="row">
-                            <div class="col-md-3 mb-2">
-                                <a href="posts.php" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-plus me-2"></i>Create Post
-                                </a>
-                            </div>
-                            <?php if ($_SESSION['role'] === 'admin'): ?>
-                                <div class="col-md-3 mb-2">
-                                    <a href="users.php" class="btn btn-outline-info w-100">
-                                        <i class="fas fa-users me-2"></i>Manage Users
-                                    </a>
-                                </div>
-                                <div class="col-md-3 mb-2">
-                                    <a href="settings.php" class="btn btn-outline-secondary w-100">
-                                        <i class="fas fa-cog me-2"></i>Settings
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                            <div class="col-md-3 mb-2">
-                                <a href="../feed/index.php" class="btn btn-outline-success w-100">
-                                    <i class="fas fa-eye me-2"></i>View Site
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="quick-actions fade-in-delay">
+            <a href="posts.php" class="action-btn">
+                <i class="fas fa-plus"></i>
+                Create New Post
+            </a>
+            <?php if ($_SESSION['role'] === 'admin'): ?>
+            <a href="users.php" class="action-btn">
+                <i class="fas fa-users-cog"></i>
+                Manage Users
+            </a>
+            <a href="settings.php" class="action-btn">
+                <i class="fas fa-cog"></i>
+                Site Settings
+            </a>
+            <?php endif; ?>
+            <a href="../feed/index.php" class="action-btn">
+                <i class="fas fa-eye"></i>
+                View Live Site
+            </a>
         </div>
 
-        <!-- Recent Activity -->
+        <!-- Activity Sections -->
         <div class="row">
             <!-- Recent Users -->
-            <div class="col-lg-6">
-                <div class="activity-card">
-                    <h6 class="activity-header">
-                        <i class="fas fa-user-plus me-2"></i>Recent Users
-                    </h6>
+            <div class="col-lg-6 mb-4">
+                <div class="activity-section fade-in-delay">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-plus"></i>
+                        Recent Users
+                    </h2>
+                    
                     <?php if (empty($recent_users)): ?>
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-users fa-2x mb-2 opacity-50"></i>
-                            <p>No users yet</p>
+                        <div class="text-center py-4">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No users yet</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_users as $user): ?>
-                            <div class="activity-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($user['username']); ?></strong>
-                                        <br>
-                                        <small class="text-muted"><?php echo htmlspecialchars($user['email']); ?></small>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge bg-<?php echo $user['subscription_status'] === 'none' ? 'secondary' : 'primary'; ?>">
-                                            <?php echo ucfirst($user['subscription_status']); ?>
-                                        </span>
-                                        <br>
-                                        <small class="text-muted"><?php echo timeAgo($user['created_at']); ?></small>
-                                    </div>
-                                </div>
+                        <div class="activity-item">
+                            <div class="activity-icon user">
+                                <i class="fas fa-user"></i>
                             </div>
+                            <div class="activity-content">
+                                <div class="activity-title"><?= htmlspecialchars($user['username']) ?></div>
+                                <div class="activity-description"><?= htmlspecialchars($user['email']) ?></div>
+                            </div>
+                            <div class="activity-time"><?= timeAgo($user['created_at']) ?></div>
+                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
 
             <!-- Recent Posts -->
-            <div class="col-lg-6">
-                <div class="activity-card">
-                    <h6 class="activity-header">
-                        <i class="fas fa-edit me-2"></i>Recent Posts
-                    </h6>
+            <div class="col-lg-6 mb-4">
+                <div class="activity-section fade-in-delay">
+                    <h2 class="section-title">
+                        <i class="fas fa-edit"></i>
+                        Recent Posts
+                    </h2>
+                    
                     <?php if (empty($recent_posts)): ?>
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-edit fa-2x mb-2 opacity-50"></i>
-                            <p>No posts yet</p>
+                        <div class="text-center py-4">
+                            <i class="fas fa-edit fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No posts yet</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_posts as $post): ?>
-                            <div class="activity-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <strong><?php echo $post['title'] ? htmlspecialchars($post['title']) : 'Untitled Post'; ?></strong>
-                                        <br>
-                                        <small class="text-muted">by <?php echo htmlspecialchars($post['username']); ?></small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <?php echo htmlspecialchars(substr($post['content'], 0, 60)); ?>...
-                                        </small>
-                                    </div>
-                                    <div class="text-end ms-2">
-                                        <span class="badge bg-<?php echo $post['status'] === 'published' ? 'success' : 'secondary'; ?>">
-                                            <?php echo ucfirst($post['status']); ?>
-                                        </span>
-                                        <br>
-                                        <small class="text-muted"><?php echo timeAgo($post['created_at']); ?></small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="fas fa-eye"></i> <?php echo $post['views']; ?> 
-                                            <i class="fas fa-heart ms-1"></i> <?php echo $post['likes']; ?>
-                                        </small>
-                                    </div>
-                                </div>
+                        <div class="activity-item">
+                            <div class="activity-icon post">
+                                <i class="fas fa-edit"></i>
                             </div>
+                            <div class="activity-content">
+                                <div class="activity-title"><?= $post['title'] ? htmlspecialchars($post['title']) : 'Untitled Post' ?></div>
+                                <div class="activity-description">by <?= htmlspecialchars($post['username']) ?></div>
+                            </div>
+                            <div class="activity-time"><?= timeAgo($post['created_at']) ?></div>
+                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <!-- Mobile Toggle Button -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Sidebar toggle for mobile
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const mobileToggle = document.getElementById('mobileToggle');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+            
+            // Update toggle icon
+            const icon = mobileToggle.querySelector('i');
+            if (sidebar.classList.contains('show')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Event listeners
+        mobileToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Close sidebar when clicking nav links on mobile
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 992) {
+                    toggleSidebar();
+                }
+            });
         });
 
-        console.log('📊 Admin Dashboard loaded successfully!');
-        console.log('👥 Total users:', <?php echo $stats['total_users']; ?>);
-        console.log('📝 Total posts:', <?php echo $stats['total_posts']; ?>);
-        console.log('👑 Total subscribers:', <?php echo $stats['total_subscribers']; ?>);
+        // Desktop sidebar toggle
+        if (window.innerWidth > 992) {
+            mainContent.classList.add('sidebar-open');
+            sidebar.classList.add('show');
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.add('show');
+                mainContent.classList.add('sidebar-open');
+                sidebarOverlay.classList.remove('show');
+                mobileToggle.querySelector('i').classList.remove('fa-times');
+                mobileToggle.querySelector('i').classList.add('fa-bars');
+            } else {
+                mainContent.classList.remove('sidebar-open');
+            }
+        });
+
+        console.log('🎉 Enhanced Admin Dashboard loaded successfully!');
+        console.log('👥 Total users:', <?= $stats['total_users'] ?>);
+        console.log('📝 Total posts:', <?= $stats['total_posts'] ?>);
+        console.log('👑 Total subscribers:', <?= $stats['total_subscribers'] ?>);
     </script>
 </body>
 </html>
