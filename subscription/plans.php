@@ -1,15 +1,11 @@
 <?php
-/**
- * Subscription Plans Page with Stripe Integration
- * Save as: subscription/plans.php
- */
-
 session_start();
 require_once '../config.php';
+require_once '../includes/functions.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -18,87 +14,77 @@ try {
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
         DB_USER,
         DB_PASS,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Get current user info
+    // Get current user
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $currentUser = $stmt->fetch();
 
     if (!$currentUser) {
+        session_destroy();
         header('Location: ../auth/login.php');
         exit;
     }
 
-    // Get subscription plans from database
-    $plans = $pdo->query("
-        SELECT * FROM subscription_plans 
-        WHERE active = 1 
-        ORDER BY sort_order, price ASC
-    ")->fetchAll();
+    // Get site settings for pricing
+    $settings = [];
+    try {
+        $settingsStmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings");
+        while ($row = $settingsStmt->fetch()) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+    } catch (Exception $e) {
+        error_log("Settings query error: " . $e->getMessage());
+    }
 
 } catch (Exception $e) {
-    error_log("Subscription plans error: " . $e->getMessage());
-    $plans = [];
+    error_log("Plans page error: " . $e->getMessage());
+    $currentUser = null;
 }
 
-// Default plans if database is empty
-if (empty($plans)) {
-    $plans = [
-        [
-            'id' => 'monthly',
-            'name' => 'Monthly VIP',
-            'description' => 'Full access to all premium content',
-            'price' => 19.99,
-            'billing_cycle' => 'monthly',
-            'stripe_price_id' => 'price_monthly_placeholder',
-            'features' => json_encode([
-                'All premium posts and videos',
-                'Exclusive photo sets',
-                'Direct messaging access',
-                'Live stream priority',
-                'Monthly exclusive content',
-                'Cancel anytime'
-            ])
+function getPlanPrice($settings, $plan, $currency = 'GBP') {
+    $key = "subscription_{$plan}_price_" . strtolower($currency);
+    return $settings[$key] ?? '9.99';
+}
+
+function getCurrencySymbol($currency) {
+    return $currency === 'USD' ? '$' : '£';
+}
+
+function getFeaturesList($plan) {
+    $features = [
+        'monthly' => [
+            'Unlimited access to premium content',
+            'High-resolution photos and videos',
+            'Exclusive weekly content drops',
+            'Priority comment responses',
+            'Mobile and desktop access',
+            'Cancel anytime'
         ],
-        [
-            'id' => 'yearly',
-            'name' => 'Yearly VIP',
-            'description' => 'Best value - 2 months free!',
-            'price' => 199.99,
-            'billing_cycle' => 'yearly',
-            'stripe_price_id' => 'price_yearly_placeholder',
-            'features' => json_encode([
-                'Everything in Monthly VIP',
-                'Save $40 per year',
-                'Priority customer support',
-                'Exclusive yearly bonus content',
-                'First access to new features',
-                'Annual subscriber perks'
-            ])
+        'yearly' => [
+            'Everything in Monthly plan',
+            'Save 17% with yearly billing',
+            'Early access to new content',
+            'Behind-the-scenes content',
+            'Exclusive live streams',
+            'Birthday month bonus content',
+            'Priority customer support'
         ],
-        [
-            'id' => 'lifetime',
-            'name' => 'Lifetime VIP',
-            'description' => 'One-time payment, forever access',
-            'price' => 499.99,
-            'billing_cycle' => 'lifetime',
-            'stripe_price_id' => 'price_lifetime_placeholder',
-            'features' => json_encode([
-                'Everything in Yearly VIP',
-                'Lifetime access guarantee',
-                'Exclusive lifetime member badge',
-                'Special lifetime-only content',
-                'VIP Discord channel access',
-                'Personal thank you message',
-                'Never pay again!'
-            ])
+        'lifetime' => [
+            'Everything in Yearly plan',
+            'One-time payment, lifetime access',
+            'VIP status and badge',
+            'Exclusive lifetime member content',
+            'Direct messaging privileges',
+            'Annual exclusive photo sets',
+            'Forever locked-in pricing',
+            'Priority access to new features'
         ]
     ];
+    
+    return $features[$plan] ?? [];
 }
 
 function getAvatarUrl($avatar, $useThumb = true) {
@@ -173,246 +159,147 @@ function getAvatarUrl($avatar, $useThumb = true) {
         }
         
         .plan-card.featured {
-            transform: scale(1.05);
             border: 3px solid var(--accent-color);
-            box-shadow: 0 30px 80px rgba(253, 121, 168, 0.3);
+            transform: scale(1.05);
         }
         
-        .plan-card.featured::before {
-            content: "MOST POPULAR";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: var(--gradient-accent);
-            color: white;
-            text-align: center;
-            padding: 0.5rem;
-            font-weight: bold;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
+        .plan-card.featured:hover {
+            transform: scale(1.08) translateY(-10px);
         }
         
         .plan-header {
-            padding: 2rem 2rem 1rem;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 2rem;
             text-align: center;
             position: relative;
         }
         
-        .plan-name {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
+        .plan-card.featured .plan-header {
+            background: var(--gradient-accent);
         }
         
-        .plan-description {
-            color: #6c757d;
-            margin-bottom: 1rem;
+        .plan-card.lifetime .plan-header {
+            background: var(--gradient-gold);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: var(--accent-color);
+            color: white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
         
         .plan-price {
             font-size: 3rem;
             font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
+            margin: 0;
         }
         
-        .plan-price .currency {
-            font-size: 1.5rem;
-            vertical-align: top;
-        }
-        
-        .plan-price .period {
+        .plan-period {
+            opacity: 0.8;
             font-size: 1rem;
-            color: #6c757d;
-            font-weight: normal;
-        }
-        
-        .plan-savings {
-            background: var(--gradient-accent);
-            color: white;
-            padding: 0.3rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 1rem;
         }
         
         .plan-features {
-            padding: 0 2rem;
-            margin-bottom: 2rem;
+            padding: 2rem;
         }
         
         .feature-item {
             display: flex;
             align-items: center;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
             padding: 0.5rem 0;
         }
         
         .feature-icon {
             color: var(--primary-color);
-            margin-right: 0.8rem;
+            margin-right: 1rem;
             width: 20px;
-            text-align: center;
         }
         
-        .plan-footer {
-            padding: 0 2rem 2rem;
+        .plan-card.featured .feature-icon {
+            color: var(--accent-color);
         }
         
-        .btn-subscribe {
-            width: 100%;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 50px;
-            border: none;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .plan-card.lifetime .feature-icon {
+            color: #f39c12;
         }
         
-        .btn-subscribe.btn-monthly {
+        .subscribe-btn {
             background: var(--gradient-primary);
+            border: none;
             color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 1rem 0;
         }
         
-        .btn-subscribe.btn-yearly {
+        .subscribe-btn:hover {
             background: var(--gradient-accent);
-            color: white;
-        }
-        
-        .btn-subscribe.btn-lifetime {
-            background: var(--gradient-gold);
-            color: white;
-        }
-        
-        .btn-subscribe:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         
-        .btn-subscribe:disabled {
-            background: #6c757d;
-            transform: none;
-            box-shadow: none;
+        .plan-card.lifetime .subscribe-btn {
+            background: var(--gradient-gold);
         }
         
-        .current-subscription {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            border: 2px solid #28a745;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
+        .current-plan {
+            background: linear-gradient(135deg, #00cec9, #55a3ff);
+            color: white;
         }
         
-        .current-user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-            margin-right: 8px;
-        }
-        
-        .testimonials {
+        .testimonial {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 2rem;
-            margin: 3rem 0;
+            margin: 2rem 0;
             color: white;
-        }
-        
-        .testimonial-item {
             text-align: center;
-            padding: 1rem;
-        }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
         
         .faq-section {
             background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 2rem;
-            margin: 3rem 0;
-        }
-        
-        .security-badges {
-            text-align: center;
             margin: 2rem 0;
-            color: rgba(255,255,255,0.8);
         }
         
-        .security-badge {
-            display: inline-block;
-            margin: 0 1rem;
-            padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            font-size: 0.9rem;
+        .savings-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #e74c3c;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
         }
         
-        @media (max-width: 768px) {
-            .plan-card.featured {
-                transform: none;
-                margin-bottom: 2rem;
-            }
-            
-            .subscription-header {
-                margin: 1rem 0;
-                padding: 1.5rem;
-            }
-            
-            .plan-price {
-                font-size: 2.5rem;
-            }
+        .current-user-avatar {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="text-center text-white">
-            <div class="loading-spinner mb-3"></div>
-            <h5>Processing your subscription...</h5>
-            <p>Please wait while we redirect you to secure payment...</p>
-        </div>
-    </div>
-
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="../index.php">
+            <a class="navbar-brand fw-bold" href="../feed/index.php">
                 <i class="fas fa-star me-2"></i>Chloe Belle
             </a>
             
@@ -437,7 +324,7 @@ function getAvatarUrl($avatar, $useThumb = true) {
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <img src="<?= getAvatarUrl($currentUser['avatar']) ?>" alt="<?= htmlspecialchars($currentUser['username']) ?>" class="current-user-avatar">
+                            <img src="<?= getAvatarUrl($currentUser['avatar']) ?>" alt="<?= htmlspecialchars($currentUser['username']) ?>" class="current-user-avatar rounded-circle me-2">
                             <?= htmlspecialchars($currentUser['username']) ?>
                         </a>
                         <ul class="dropdown-menu">
@@ -459,143 +346,129 @@ function getAvatarUrl($avatar, $useThumb = true) {
     </nav>
 
     <div class="container mt-5 pt-4">
-        <!-- Header Section -->
+        <!-- Header -->
         <div class="subscription-header">
             <h1 class="display-4 fw-bold mb-3">
-                <i class="fas fa-crown text-warning me-3"></i>
-                Join the VIP Experience
+                <i class="fas fa-crown me-3"></i>VIP Membership Plans
             </h1>
-            <p class="lead mb-4">
-                Unlock exclusive content, behind-the-scenes access, and connect with me like never before
-            </p>
-            <div class="d-flex justify-content-center align-items-center flex-wrap">
-                <span class="badge bg-warning text-dark me-3 mb-2">
-                    <i class="fas fa-users me-1"></i>2,400+ Happy Subscribers
-                </span>
-                <span class="badge bg-success me-3 mb-2">
-                    <i class="fas fa-lock me-1"></i>Secure Payments
-                </span>
-                <span class="badge bg-info text-dark mb-2">
-                    <i class="fas fa-mobile-alt me-1"></i>Cancel Anytime
-                </span>
-            </div>
+            <p class="lead mb-0">Unlock exclusive content and join my premium community</p>
         </div>
 
         <!-- Current Subscription Status -->
         <?php if ($currentUser['subscription_status'] !== 'none'): ?>
-            <div class="current-subscription">
-                <h4><i class="fas fa-crown text-warning me-2"></i>Your Current Plan</h4>
-                <p class="mb-2">
-                    <strong><?= ucfirst($currentUser['subscription_status']) ?> VIP Subscription</strong>
-                </p>
-                <?php if ($currentUser['subscription_expires']): ?>
-                    <p class="mb-0">
-                        Expires: <?= date('F j, Y', strtotime($currentUser['subscription_expires'])) ?>
-                    </p>
-                <?php else: ?>
-                    <p class="mb-0">Lifetime Access ✨</p>
-                <?php endif; ?>
-                <small class="text-muted">
-                    Want to upgrade or change your plan? Choose a new plan below.
-                </small>
+            <div class="alert alert-success text-center">
+                <i class="fas fa-check-circle fa-2x mb-2"></i>
+                <h5>You're a <?= ucfirst($currentUser['subscription_status']) ?> Member!</h5>
+                <p class="mb-0">Thank you for your support! You have full access to all premium content.</p>
             </div>
         <?php endif; ?>
 
-        <!-- Subscription Plans -->
-        <div class="row">
-            <?php foreach ($plans as $index => $plan): ?>
-                <?php 
-                $features = json_decode($plan['features'] ?? '[]', true) ?: [];
-                $isCurrentPlan = $currentUser['subscription_status'] === $plan['id'];
-                $isFeatured = $plan['id'] === 'yearly';
-                ?>
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="plan-card <?= $isFeatured ? 'featured' : '' ?>">
-                        <div class="plan-header">
-                            <h3 class="plan-name"><?= htmlspecialchars($plan['name']) ?></h3>
-                            <p class="plan-description"><?= htmlspecialchars($plan['description']) ?></p>
-                            
-                            <div class="plan-price">
-                                <span class="currency">$</span><?= number_format($plan['price'], 2) ?>
-                                <?php if ($plan['billing_cycle'] !== 'lifetime'): ?>
-                                    <span class="period">/ <?= $plan['billing_cycle'] === 'yearly' ? 'year' : 'month' ?></span>
-                                <?php endif; ?>
+        <!-- Pricing Plans -->
+        <div class="row justify-content-center">
+            <!-- Monthly Plan -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <h3 class="mb-3">Monthly VIP</h3>
+                        <div class="plan-price"><?= getCurrencySymbol('GBP') ?><?= getPlanPrice($settings, 'monthly', 'GBP') ?></div>
+                        <div class="plan-period">per month</div>
+                    </div>
+                    <div class="plan-features">
+                        <?php foreach (getFeaturesList('monthly') as $feature): ?>
+                            <div class="feature-item">
+                                <i class="fas fa-check feature-icon"></i>
+                                <span><?= htmlspecialchars($feature) ?></span>
                             </div>
-                            
-                            <?php if ($plan['id'] === 'yearly'): ?>
-                                <div class="plan-savings">Save $40 per year!</div>
-                            <?php elseif ($plan['id'] === 'lifetime'): ?>
-                                <div class="plan-savings">Best Value Forever!</div>
-                            <?php endif; ?>
-                        </div>
+                        <?php endforeach; ?>
                         
-                        <div class="plan-features">
-                            <?php foreach ($features as $feature): ?>
-                                <div class="feature-item">
-                                    <i class="fas fa-check feature-icon"></i>
-                                    <span><?= htmlspecialchars($feature) ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                        <div class="plan-footer">
-                            <?php if ($isCurrentPlan): ?>
-                                <button class="btn btn-subscribe" disabled>
-                                    <i class="fas fa-check me-2"></i>Current Plan
-                                </button>
-                            <?php else: ?>
-                                <button class="btn btn-subscribe btn-<?= $plan['id'] ?>" 
-                                        onclick="subscribeToPlan('<?= $plan['id'] ?>', '<?= htmlspecialchars($plan['name']) ?>', <?= $plan['price'] ?>)">
-                                    <i class="fas fa-crown me-2"></i>
-                                    <?= $plan['billing_cycle'] === 'lifetime' ? 'Get Lifetime Access' : 'Subscribe Now' ?>
-                                </button>
-                            <?php endif; ?>
-                        </div>
+                        <?php if ($currentUser['subscription_status'] === 'monthly'): ?>
+                            <button class="subscribe-btn current-plan" disabled>
+                                <i class="fas fa-check me-2"></i>Current Plan
+                            </button>
+                        <?php else: ?>
+                            <button class="subscribe-btn" onclick="subscribe('monthly')">
+                                <i class="fas fa-credit-card me-2"></i>Subscribe Monthly
+                            </button>
+                        <?php endif; ?>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            </div>
+
+            <!-- Yearly Plan (Featured) -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card featured">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="savings-badge">Save 17%</div>
+                    <div class="plan-header">
+                        <h3 class="mb-3">Yearly VIP</h3>
+                        <div class="plan-price"><?= getCurrencySymbol('GBP') ?><?= getPlanPrice($settings, 'yearly', 'GBP') ?></div>
+                        <div class="plan-period">per year</div>
+                        <small class="d-block mt-2 opacity-75">
+                            That's just <?= getCurrencySymbol('GBP') ?><?= number_format(getPlanPrice($settings, 'yearly', 'GBP') / 12, 2) ?>/month
+                        </small>
+                    </div>
+                    <div class="plan-features">
+                        <?php foreach (getFeaturesList('yearly') as $feature): ?>
+                            <div class="feature-item">
+                                <i class="fas fa-check feature-icon"></i>
+                                <span><?= htmlspecialchars($feature) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                        
+                        <?php if ($currentUser['subscription_status'] === 'yearly'): ?>
+                            <button class="subscribe-btn current-plan" disabled>
+                                <i class="fas fa-check me-2"></i>Current Plan
+                            </button>
+                        <?php else: ?>
+                            <button class="subscribe-btn" onclick="subscribe('yearly')">
+                                <i class="fas fa-crown me-2"></i>Subscribe Yearly
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifetime Plan -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card lifetime">
+                    <div class="plan-header">
+                        <h3 class="mb-3">Lifetime Access</h3>
+                        <div class="plan-price"><?= getCurrencySymbol('GBP') ?><?= getPlanPrice($settings, 'lifetime', 'GBP') ?></div>
+                        <div class="plan-period">one-time payment</div>
+                    </div>
+                    <div class="plan-features">
+                        <?php foreach (getFeaturesList('lifetime') as $feature): ?>
+                            <div class="feature-item">
+                                <i class="fas fa-infinity feature-icon"></i>
+                                <span><?= htmlspecialchars($feature) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                        
+                        <?php if ($currentUser['subscription_status'] === 'lifetime'): ?>
+                            <button class="subscribe-btn current-plan" disabled>
+                                <i class="fas fa-infinity me-2"></i>Lifetime Member
+                            </button>
+                        <?php else: ?>
+                            <button class="subscribe-btn" onclick="subscribe('lifetime')">
+                                <i class="fas fa-infinity me-2"></i>Get Lifetime Access
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Security Badges -->
-        <div class="security-badges">
-            <div class="security-badge">
-                <i class="fas fa-shield-alt me-2"></i>
-                SSL Encrypted
-            </div>
-            <div class="security-badge">
-                <i class="fab fa-cc-stripe me-2"></i>
-                Stripe Secure
-            </div>
-            <div class="security-badge">
-                <i class="fas fa-lock me-2"></i>
-                PCI Compliant
-            </div>
-        </div>
-
-        <!-- Testimonials -->
-        <div class="testimonials">
-            <h3 class="text-center mb-4">What VIP Members Are Saying</h3>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="testimonial-item">
-                        <i class="fas fa-quote-left fa-2x mb-3 text-warning"></i>
-                        <p>"The exclusive content is absolutely worth it! Love the personal touch and behind-the-scenes access."</p>
-                        <strong>- Sarah M.</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="testimonial-item">
-                        <i class="fas fa-quote-left fa-2x mb-3 text-warning"></i>
-                        <p>"Best decision I made! The community is amazing and Chloe really cares about her VIP members."</p>
-                        <strong>- Mike J.</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="testimonial-item">
-                        <i class="fas fa-quote-left fa-2x mb-3 text-warning"></i>
-                        <p>"The lifetime plan was such a steal! Already got my money's worth in the first month."</p>
-                        <strong>- Emma K.</strong>
-                    </div>
+        <!-- Testimonial -->
+        <div class="testimonial">
+            <i class="fas fa-quote-left fa-3x mb-3 opacity-50"></i>
+            <blockquote class="blockquote">
+                <p class="mb-3">"The exclusive content and personal interaction make this subscription absolutely worth it. Chloe's creativity and engagement with her community is amazing!"</p>
+            </blockquote>
+            <div class="d-flex align-items-center justify-content-center">
+                <img src="../assets/images/testimonial-avatar.jpg" alt="Happy Member" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                <div>
+                    <strong>Sarah M.</strong><br>
+                    <small class="opacity-75">VIP Member since 2023</small>
                 </div>
             </div>
         </div>
@@ -603,116 +476,96 @@ function getAvatarUrl($avatar, $useThumb = true) {
         <!-- FAQ Section -->
         <div class="faq-section">
             <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+            
             <div class="accordion" id="faqAccordion">
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                            Can I cancel my subscription anytime?
+                            What do I get with a VIP membership?
                         </button>
                     </h2>
                     <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Yes! You can cancel your monthly or yearly subscription at any time. You'll continue to have access until the end of your current billing period.
+                            VIP members get unlimited access to all premium photos, videos, and exclusive content. You'll also receive priority responses to comments and early access to new releases.
                         </div>
                     </div>
                 </div>
+                
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                            Is my payment information secure?
+                            Can I cancel my subscription anytime?
                         </button>
                     </h2>
                     <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            Absolutely! We use Stripe for payment processing, which is bank-level secure and PCI compliant. We never store your payment information on our servers.
+                            Yes! Monthly and yearly subscriptions can be cancelled at any time. You'll continue to have access until your current billing period ends.
                         </div>
                     </div>
                 </div>
+                
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            What happens if I upgrade my plan?
+                            Is my payment information secure?
                         </button>
                     </h2>
                     <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div class="accordion-body">
-                            When you upgrade, you'll be charged a prorated amount for the difference, and your new plan starts immediately with full access to all features.
+                            Absolutely! We use Stripe for secure payment processing. Your payment information is encrypted and never stored on our servers.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            What's included in the lifetime membership?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Lifetime membership includes everything in the yearly plan, plus exclusive lifetime-only content, VIP status, and guaranteed access to all future features and content - forever!
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Money Back Guarantee -->
+        <div class="text-center mb-5">
+            <div class="badge bg-success fs-6 p-3 mb-3">
+                <i class="fas fa-shield-alt me-2"></i>30-Day Money Back Guarantee
+            </div>
+            <p class="text-white">Not satisfied? Get a full refund within 30 days, no questions asked.</p>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Initialize Stripe
-        const stripe = Stripe('pk_test_your_publishable_key_here'); // Replace with your actual publishable key
-
-        function subscribeToPlan(planId, planName, price) {
-            // Show loading overlay
-            document.getElementById('loadingOverlay').style.display = 'flex';
+        function subscribe(plan) {
+            // Here you would integrate with your payment processor (Stripe, PayPal, etc.)
+            // For now, we'll redirect to a payment processing page
             
-            // Create checkout session
-            fetch('../api/create-checkout-session.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    plan_id: planId,
-                    plan_name: planName,
-                    price: price
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect to Stripe Checkout
-                    stripe.redirectToCheckout({
-                        sessionId: data.session_id
-                    }).then(function (result) {
-                        if (result.error) {
-                            alert('Payment failed: ' + result.error.message);
-                            document.getElementById('loadingOverlay').style.display = 'none';
-                        }
-                    });
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to create checkout session'));
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-                document.getElementById('loadingOverlay').style.display = 'none';
+            alert(`Redirecting to secure payment for ${plan} subscription...`);
+            
+            // Example: redirect to payment processor
+            // window.location.href = `payment.php?plan=${plan}`;
+            
+            // Or you could open Stripe Checkout directly here
+            // stripe.redirectToCheckout({ sessionId: 'session_id_from_server' });
+        }
+        
+        // Add some interactive effects
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = this.classList.contains('featured') ? 'scale(1.08) translateY(-10px)' : 'translateY(-10px)';
             });
-        }
-
-        // Handle URL parameters for success/cancel
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'true') {
-            // Show success message
-            const successAlert = document.createElement('div');
-            successAlert.className = 'alert alert-success alert-dismissible fade show';
-            successAlert.innerHTML = `
-                <strong>🎉 Welcome to VIP!</strong> Your subscription has been activated successfully.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.querySelector('.container').insertBefore(successAlert, document.querySelector('.subscription-header'));
-        } else if (urlParams.get('canceled') === 'true') {
-            // Show canceled message
-            const cancelAlert = document.createElement('div');
-            cancelAlert.className = 'alert alert-warning alert-dismissible fade show';
-            cancelAlert.innerHTML = `
-                Payment was canceled. You can try again anytime!
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.querySelector('.container').insertBefore(cancelAlert, document.querySelector('.subscription-header'));
-        }
-
-        console.log('💳 Subscription plans loaded');
-        console.log('🔐 Stripe integration ready');
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = this.classList.contains('featured') ? 'scale(1.05)' : '';
+            });
+        });
     </script>
 </body>
 </html>

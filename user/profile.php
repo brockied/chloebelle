@@ -1,14 +1,11 @@
 <?php
-/**
- * Enhanced Profile Page with Avatar Upload and Crop
- */
-
 session_start();
 require_once '../config.php';
+require_once '../includes/functions.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../index.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -20,195 +17,189 @@ try {
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4",
         DB_USER,
         DB_PASS,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
-    // Get current user info
+    // Get current user
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
-    $currentUser = $stmt->fetch();
+    $user = $stmt->fetch();
 
-    if (!$currentUser) {
-        header('Location: ../auth/logout.php');
+    if (!$user) {
+        session_destroy();
+        header('Location: ../auth/login.php');
         exit;
     }
 
+    // Handle form submissions
+    if ($_POST) {
+        if (isset($_POST['update_profile'])) {
+            $username = trim($_POST['username']);
+            $email = trim($_POST['email']);
+            $bio = trim($_POST['bio'] ?? '');
+            $location = trim($_POST['location'] ?? '');
+            $website = trim($_POST['website'] ?? '');
+            
+            // Validate input
+            if (empty($username) || empty($email)) {
+                $message = 'Username and email are required.';
+                $messageType = 'danger';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $message = 'Please enter a valid email address.';
+                $messageType = 'danger';
+            } else {
+                // Check if username/email already exists (excluding current user)
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?");
+                $stmt->execute([$username, $email, $user['id']]);
+                
+                if ($stmt->fetch()) {
+                    $message = 'Username or email already exists.';
+                    $messageType = 'danger';
+                } else {
+                    // Update profile
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, bio = ?, location = ?, website = ?, updated_at = NOW() WHERE id = ?");
+                    $stmt->execute([$username, $email, $bio, $location, $website, $user['id']]);
+                    
+                    $message = 'Profile updated successfully!';
+                    $messageType = 'success';
+                    
+                    // Refresh user data
+                    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                    $stmt->execute([$user['id']]);
+                    $user = $stmt->fetch();
+                }
+            }
+        }
+        
+        if (isset($_POST['upload_avatar']) && isset($_FILES['avatar'])) {
+            $file = $_FILES['avatar'];
+            
+            if ($file['error'] === 0) {
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                $maxSize = 5 * 1024 * 1024; // 5MB
+                
+                if (!in_array($file['type'], $allowedTypes)) {
+                    $message = 'Please upload a valid image file (JPEG, PNG, GIF, or WebP).';
+                    $messageType = 'danger';
+                } elseif ($file['size'] > $maxSize) {
+                    $message = 'File size must be less than 5MB.';
+                    $messageType = 'danger';
+                } else {
+                    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                    $filename = uniqid() . '.' . $extension;
+                    $uploadPath = '../uploads/avatars/' . $filename;
+                    
+                    // Create upload directory if it doesn't exist
+                    if (!file_exists('../uploads/avatars/')) {
+                        mkdir('../uploads/avatars/', 0755, true);
+                    }
+                    
+                    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                        // Create thumbnail
+                        createAvatarThumbnail($uploadPath, '../uploads/avatars/thumb_' . $filename);
+                        
+                        // Delete old avatar if exists
+                        if ($user['avatar'] && file_exists('../uploads/avatars/' . $user['avatar'])) {
+                            unlink('../uploads/avatars/' . $user['avatar']);
+                            if (file_exists('../uploads/avatars/thumb_' . $user['avatar'])) {
+                                unlink('../uploads/avatars/thumb_' . $user['avatar']);
+                            }
+                        }
+                        
+                        // Update database
+                        $stmt = $pdo->prepare("UPDATE users SET avatar = ?, updated_at = NOW() WHERE id = ?");
+                        $stmt->execute([$filename, $user['id']]);
+                        
+                        $message = 'Profile picture updated successfully!';
+                        $messageType = 'success';
+                        
+                        // Refresh user data
+                        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                        $stmt->execute([$user['id']]);
+                        $user = $stmt->fetch();
+                    } else {
+                        $message = 'Error uploading profile picture. Please try again.';
+                        $messageType = 'danger';
+                    }
+                }
+            }
+        }
+    }
+
+    // Get user's posts count
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM posts WHERE user_id = ? AND status = 'published'");
+    $stmt->execute([$user['id']]);
+    $postsCount = $stmt->fetchColumn();
+
 } catch (Exception $e) {
-    error_log("Profile database error: " . $e->getMessage());
-    $message = "Database connection error. Please try again later.";
+    error_log("Profile error: " . $e->getMessage());
+    $message = 'An error occurred. Please try again.';
     $messageType = 'danger';
 }
 
-// Ensure upload directory exists
-$avatarDir = '../uploads/avatars';
-if (!is_dir($avatarDir)) {
-    mkdir($avatarDir, 0755, true);
-}
-
-// Handle profile picture upload with crop data
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cropped_image'])) {
-    try {
-        $croppedImageData = $_POST['cropped_image'];
-        
-        // Remove data:image/jpeg;base64, part
-        $croppedImageData = preg_replace('#^data:image/[^;]+;base64,#', '', $croppedImageData);
-        $croppedImageData = base64_decode($croppedImageData);
-        
-        if (!$croppedImageData) {
-            throw new Exception('Invalid image data received.');
-        }
-        
-        // Generate unique filename
-        $filename = 'avatar_' . $currentUser['id'] . '_' . time() . '.jpg';
-        $destination = $avatarDir . '/' . $filename;
-        
-        // Delete old avatar if exists
-        if (!empty($currentUser['avatar'])) {
-            $oldFile = $avatarDir . '/' . $currentUser['avatar'];
-            $oldThumb = $avatarDir . '/thumb_' . $currentUser['avatar'];
-            
-            if (file_exists($oldFile)) {
-                unlink($oldFile);
-            }
-            
-            if (file_exists($oldThumb)) {
-                unlink($oldThumb);
-            }
-        }
-        
-        // Save cropped image
-        if (file_put_contents($destination, $croppedImageData)) {
-            chmod($destination, 0644);
-            
-            // Create thumbnail
-            if (extension_loaded('gd')) {
-                $thumbPath = $avatarDir . '/thumb_' . $filename;
-                createAvatarThumbnail($destination, $thumbPath, 200, 95);
-            }
-            
-            // Update database
-            $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-            $stmt->execute([$filename, $currentUser['id']]);
-            
-            // Update current user data
-            $currentUser['avatar'] = $filename;
-            
-            $message = 'Profile picture updated successfully!';
-            $messageType = 'success';
-            
-            // Clear any cache
-            $_SESSION['avatar_updated'] = time();
-            
-        } else {
-            throw new Exception('Failed to save cropped image. Please try again.');
-        }
-        
-    } catch (Exception $e) {
-        error_log("Avatar upload error: " . $e->getMessage());
-        $message = $e->getMessage();
-        $messageType = 'danger';
-    }
-}
-
-// Handle regular file upload (for cropping preview)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) {
-    try {
-        $file = $_FILES['profile_picture'];
-        
-        // Validate file upload
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('File upload failed. Please try again.');
-        }
-        
-        // Check file size (10MB max for cropping)
-        $maxSize = 10 * 1024 * 1024;
-        if ($file['size'] > $maxSize) {
-            throw new Exception('File too large. Maximum size allowed is 10MB.');
-        }
-        
-        if ($file['size'] == 0) {
-            throw new Exception('Empty file uploaded. Please select a valid image.');
-        }
-        
-        // Check file type
-        $allowedTypes = ['jpg', 'jpeg', 'png', 'webp'];
-        $fileInfo = pathinfo($file['name']);
-        $extension = strtolower($fileInfo['extension'] ?? '');
-        
-        if (!$extension || !in_array($extension, $allowedTypes)) {
-            throw new Exception('Invalid file type. Please use JPG, PNG, or WebP format.');
-        }
-        
-        // Verify it's actually an image
-        $imageInfo = getimagesize($file['tmp_name']);
-        if (!$imageInfo) {
-            throw new Exception('File is not a valid image.');
-        }
-        
-        // Read and encode image for cropper
-        $imageData = file_get_contents($file['tmp_name']);
-        $base64Image = 'data:' . $imageInfo['mime'] . ';base64,' . base64_encode($imageData);
-        
-        // Store in session for cropper
-        $_SESSION['temp_image'] = $base64Image;
-        $_SESSION['show_crop_modal'] = true;
-        
-    } catch (Exception $e) {
-        error_log("Avatar upload error: " . $e->getMessage());
-        $message = $e->getMessage();
-        $messageType = 'danger';
-    }
-}
-
-// Enhanced thumbnail creation function
-function createAvatarThumbnail($sourcePath, $destPath, $size = 200, $quality = 95) {
-    if (!extension_loaded('gd') || !file_exists($sourcePath)) {
-        return false;
-    }
-    
-    $imageInfo = getimagesize($sourcePath);
-    if (!$imageInfo) {
-        return false;
-    }
+function createAvatarThumbnail($source, $destination, $size = 150) {
+    $imageInfo = getimagesize($source);
+    if (!$imageInfo) return false;
     
     $sourceWidth = $imageInfo[0];
     $sourceHeight = $imageInfo[1];
-    $sourceMime = $imageInfo['mime'];
+    $mimeType = $imageInfo['mime'];
     
-    // Create source image
-    switch ($sourceMime) {
+    // Create source image resource
+    switch ($mimeType) {
         case 'image/jpeg':
-            $sourceImage = imagecreatefromjpeg($sourcePath);
+            $sourceImage = imagecreatefromjpeg($source);
             break;
         case 'image/png':
-            $sourceImage = imagecreatefrompng($sourcePath);
+            $sourceImage = imagecreatefrompng($source);
+            break;
+        case 'image/gif':
+            $sourceImage = imagecreatefromgif($source);
             break;
         case 'image/webp':
-            if (function_exists('imagecreatefromwebp')) {
-                $sourceImage = imagecreatefromwebp($sourcePath);
-            } else {
-                return false;
-            }
+            $sourceImage = imagecreatefromwebp($source);
             break;
         default:
             return false;
     }
     
-    if (!$sourceImage) {
-        return false;
+    if (!$sourceImage) return false;
+    
+    // Calculate crop dimensions (square crop from center)
+    $cropSize = min($sourceWidth, $sourceHeight);
+    $cropX = ($sourceWidth - $cropSize) / 2;
+    $cropY = ($sourceHeight - $cropSize) / 2;
+    
+    // Create thumbnail
+    $thumbnail = imagecreatetruecolor($size, $size);
+    
+    // Preserve transparency for PNG and GIF
+    if ($mimeType === 'image/png' || $mimeType === 'image/gif') {
+        imagealphablending($thumbnail, false);
+        imagesavealpha($thumbnail, true);
+        $transparent = imagecolorallocatealpha($thumbnail, 255, 255, 255, 127);
+        imagefill($thumbnail, 0, 0, $transparent);
     }
     
-    // Create thumbnail (already cropped, so just resize)
-    $thumbnail = imagecreatetruecolor($size, $size);
-    imagecopyresampled($thumbnail, $sourceImage, 0, 0, 0, 0, $size, $size, $sourceWidth, $sourceHeight);
+    imagecopyresampled($thumbnail, $sourceImage, 0, 0, $cropX, $cropY, $size, $size, $cropSize, $cropSize);
     
-    // Save thumbnail as JPEG
-    $result = imagejpeg($thumbnail, $destPath, $quality);
+    // Save thumbnail
+    $result = false;
+    switch ($mimeType) {
+        case 'image/jpeg':
+            $result = imagejpeg($thumbnail, $destination, 90);
+            break;
+        case 'image/png':
+            $result = imagepng($thumbnail, $destination);
+            break;
+        case 'image/gif':
+            $result = imagegif($thumbnail, $destination);
+            break;
+        case 'image/webp':
+            $result = imagewebp($thumbnail, $destination, 90);
+            break;
+    }
     
-    // Clean up memory
     imagedestroy($sourceImage);
     imagedestroy($thumbnail);
     
@@ -222,15 +213,11 @@ function getAvatarUrl($avatar, $useThumb = true) {
     
     $avatarPath = $useThumb ? '../uploads/avatars/thumb_' . $avatar : '../uploads/avatars/' . $avatar;
     
-    // Check if thumbnail exists, fallback to original
     if ($useThumb && !file_exists($avatarPath)) {
         $avatarPath = '../uploads/avatars/' . $avatar;
     }
     
-    // Add cache buster if avatar was just updated
-    $cacheBuster = isset($_SESSION['avatar_updated']) ? '?v=' . $_SESSION['avatar_updated'] : '';
-    
-    return file_exists($avatarPath) ? $avatarPath . $cacheBuster : '../assets/images/default-avatar.jpg';
+    return file_exists($avatarPath) ? $avatarPath : '../assets/images/default-avatar.jpg';
 }
 ?>
 <!DOCTYPE html>
@@ -238,98 +225,46 @@ function getAvatarUrl($avatar, $useThumb = true) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Chloe Belle</title>
+    <title>Edit Profile - Chloe Belle</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-        }
-
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: 80px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
-        .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .navbar-brand {
-            color: #667eea !important;
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-
-        .nav-link {
-            color: #495057 !important;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #667eea !important;
-        }
-
-        .main-container {
+        
+        .profile-container {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            box-shadow: var(--card-shadow);
-            padding: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            margin: 20px auto;
-            max-width: 1000px;
         }
-
+        
         .profile-header {
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
             color: white;
-            padding: 40px 30px;
+            padding: 2rem;
             text-align: center;
-            position: relative;
         }
-
-        .profile-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="white" stop-opacity="0.1"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient></defs><rect width="100" height="20" fill="url(%23a)"/></svg>');
-            opacity: 0.1;
-        }
-
-        .avatar-container {
+        
+        .avatar-upload {
             position: relative;
             display: inline-block;
-            margin-bottom: 20px;
         }
-
-        .avatar-main {
-            width: 150px;
-            height: 150px;
+        
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
-
-        .avatar-main:hover {
-            transform: scale(1.05);
-        }
-
+        
         .upload-overlay {
             position: absolute;
             top: 0;
@@ -345,565 +280,272 @@ function getAvatarUrl($avatar, $useThumb = true) {
             transition: opacity 0.3s ease;
             cursor: pointer;
         }
-
-        .avatar-container:hover .upload-overlay {
+        
+        .avatar-upload:hover .upload-overlay {
             opacity: 1;
         }
-
-        .upload-area {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 15px;
-            padding: 40px;
-            margin: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .upload-area:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .upload-area.dragging {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.7);
-            transform: scale(1.02);
-        }
-
-        .profile-content {
-            padding: 40px;
-        }
-
-        .info-card {
-            background: rgba(255, 255, 255, 0.8);
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 25px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--hover-shadow);
-        }
-
-        .info-card .card-header {
-            background: var(--secondary-gradient);
-            color: white;
-            border: none;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 20px;
-            font-weight: 600;
-        }
-
-        .info-card .card-body {
-            padding: 25px;
-        }
-
-        .info-item {
+        
+        .profile-stats {
             display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .info-item:last-child {
-            border-bottom: none;
-        }
-
-        .info-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-gradient);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            color: white;
-            margin-right: 15px;
-            font-size: 16px;
+            gap: 2rem;
+            margin-top: 1rem;
         }
-
-        .info-label {
-            font-weight: 600;
-            color: #495057;
-            min-width: 120px;
+        
+        .stat-item {
+            text-align: center;
         }
-
-        .info-value {
-            color: #6c757d;
-            flex: 1;
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
         }
-
-        .btn-gradient {
-            background: var(--primary-gradient);
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .form-section {
+            padding: 2rem;
+        }
+        
+        .section-title {
+            color: #6c5ce7;
+            border-bottom: 2px solid #6c5ce7;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-control:focus {
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
             border: none;
-            color: white;
-            padding: 12px 30px;
             border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
+            padding: 0.75rem 2rem;
         }
-
-        .btn-gradient:hover {
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a4fd4, #8b7cf0);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-            color: white;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
         }
-
-        .alert {
-            border: none;
+        
+        .btn-outline-primary {
+            border-color: #6c5ce7;
+            color: #6c5ce7;
+            border-radius: 25px;
+        }
+        
+        .btn-outline-primary:hover {
+            background: #6c5ce7;
+            border-color: #6c5ce7;
+        }
+        
+        .subscription-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
             border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            backdrop-filter: blur(10px);
-        }
-
-        .alert-success {
-            background: rgba(40, 167, 69, 0.1);
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-
-        .alert-danger {
-            background: rgba(220, 53, 69, 0.1);
-            color: #721c24;
-            border-left: 4px solid #dc3545;
-        }
-
-        /* Crop Modal Styles */
-        .crop-modal .modal-dialog {
-            max-width: 800px;
-        }
-
-        .crop-container {
-            max-height: 400px;
-            background: #f8f9fa;
-        }
-
-        .crop-preview {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid #007bff;
-            margin: 0 auto;
-        }
-
-        .crop-controls {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .profile-header {
-                padding: 30px 20px;
-            }
-            
-            .profile-content {
-                padding: 20px;
-            }
-            
-            .avatar-main {
-                width: 120px;
-                height: 120px;
-            }
-            
-            .upload-area {
-                margin: 20px 0;
-                padding: 30px 20px;
-            }
-
-            .crop-modal .modal-dialog {
-                max-width: 95%;
-                margin: 10px auto;
-            }
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(108, 92, 231, 0.9);">
         <div class="container">
-            <a class="navbar-brand" href="../index.php">
+            <a class="navbar-brand fw-bold" href="../feed/index.php">
                 <i class="fas fa-star me-2"></i>Chloe Belle
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="../feed/">
-                    <i class="fas fa-home me-1"></i>Feed
-                </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../feed/index.php">
+                            <i class="fas fa-home me-1"></i>Feed
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../subscription/plans.php">
+                            <i class="fas fa-star me-1"></i>Subscribe
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <img src="<?= getAvatarUrl($user['avatar']) ?>" alt="<?= htmlspecialchars($user['username']) ?>" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            <?= htmlspecialchars($user['username']) ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item active" href="profile.php">
+                                <i class="fas fa-user me-2"></i>Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="settings.php">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </a></li>
+                            <li><a class="dropdown-item" href="saved.php">
+                                <i class="fas fa-bookmark me-2"></i>Saved Posts
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="../auth/logout.php">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <div class="main-container">
-            <!-- Profile Header -->
-            <div class="profile-header">
-                <div class="avatar-container">
-                    <img src="<?= getAvatarUrl($currentUser['avatar']) ?>" 
-                         alt="Profile Picture" 
-                         class="avatar-main" 
-                         id="currentAvatar">
-                    <div class="upload-overlay" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-camera fa-2x"></i>
+    <div class="container mt-5 pt-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="profile-container">
+                    <!-- Profile Header -->
+                    <div class="profile-header">
+                        <div class="avatar-upload mb-3">
+                            <img src="<?= getAvatarUrl($user['avatar']) ?>" alt="Profile Picture" class="avatar-preview" id="avatarPreview">
+                            <div class="upload-overlay" onclick="document.getElementById('avatarInput').click()">
+                                <i class="fas fa-camera text-white fa-2x"></i>
+                            </div>
+                        </div>
+                        
+                        <h2 class="mb-1"><?= htmlspecialchars($user['username']) ?></h2>
+                        <p class="mb-0 opacity-75"><?= htmlspecialchars($user['email']) ?></p>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <div class="stat-number"><?= $postsCount ?></div>
+                                <div class="stat-label">Posts</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number"><?= ucfirst($user['role']) ?></div>
+                                <div class="stat-label">Role</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number"><?= date('M Y', strtotime($user['created_at'])) ?></div>
+                                <div class="stat-label">Joined</div>
+                            </div>
+                        </div>
+                        
+                        <div class="subscription-status">
+                            <strong>Subscription Status:</strong>
+                            <span class="badge bg-<?= $user['subscription_status'] === 'none' ? 'secondary' : 'success' ?> ms-2">
+                                <?= $user['subscription_status'] === 'none' ? 'Free Member' : ucfirst($user['subscription_status']) . ' Member' ?>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <h2 class="mb-2"><?= htmlspecialchars($currentUser['username']) ?></h2>
-                <p class="mb-0 opacity-75">
-                    <i class="fas fa-envelope me-2"></i><?= htmlspecialchars($currentUser['email']) ?>
-                </p>
-            </div>
 
-            <!-- Profile Content -->
-            <div class="profile-content">
-                <!-- Alert Messages -->
-                <?php if ($message): ?>
-                    <div class="alert alert-<?= $messageType === 'success' ? 'success' : 'danger' ?> alert-dismissible fade show">
-                        <i class="fas fa-<?= $messageType === 'success' ? 'check-circle' : 'exclamation-circle' ?> me-2"></i>
-                        <?= htmlspecialchars($message) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
+                    <?php if ($message): ?>
+                        <div class="alert alert-<?= $messageType ?> alert-dismissible fade show m-4 mb-0">
+                            <?= htmlspecialchars($message) ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
 
-                <!-- Upload Area -->
-                <div class="info-card">
-                    <div class="card-header">
-                        <i class="fas fa-camera me-2"></i>Update Profile Picture
+                    <!-- Avatar Upload Form -->
+                    <div class="form-section border-bottom">
+                        <h4 class="section-title">
+                            <i class="fas fa-camera me-2"></i>Profile Picture
+                        </h4>
+                        
+                        <form method="POST" enctype="multipart/form-data" id="avatarForm">
+                            <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('avatarInput').click()">
+                                    <i class="fas fa-upload me-1"></i>Choose Photo
+                                </button>
+                                <button type="submit" name="upload_avatar" class="btn btn-primary" id="uploadBtn" style="display: none;">
+                                    <i class="fas fa-save me-1"></i>Save Picture
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB.
+                            </small>
+                        </form>
                     </div>
-                    <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data" id="uploadForm">
-                            <div class="upload-area" id="uploadArea">
-                                <input type="file" 
-                                       id="fileInput" 
-                                       name="profile_picture" 
-                                       accept="image/*" 
-                                       style="display: none;">
-                                <div id="uploadText">
-                                    <i class="fas fa-crop-alt fa-3x mb-3" style="opacity: 0.7;"></i>
-                                    <h5 class="mb-2">Drop your image here or click to browse</h5>
-                                    <p class="mb-0" style="opacity: 0.8;">
-                                        JPG, PNG, or WebP • Maximum 10MB • Crop & resize tool included
-                                    </p>
+
+                    <!-- Profile Information Form -->
+                    <div class="form-section">
+                        <h4 class="section-title">
+                            <i class="fas fa-user me-2"></i>Profile Information
+                        </h4>
+                        
+                        <form method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required>
+                                </div>
+                                <div class="col-12">
+                                    <label for="bio" class="form-label">Bio</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."><?= htmlspecialchars($user['bio'] ?? '') ?></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" value="<?= htmlspecialchars($user['location'] ?? '') ?>" placeholder="City, Country">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="website" class="form-label">Website</label>
+                                    <input type="url" class="form-control" id="website" name="website" value="<?= htmlspecialchars($user['website'] ?? '') ?>" placeholder="https://yourwebsite.com">
+                                </div>
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" name="update_profile" class="btn btn-primary">
+                                            <i class="fas fa-save me-1"></i>Update Profile
+                                        </button>
+                                        <a href="../feed/index.php" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i>Back to Feed
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
-                </div>
-
-                <!-- User Information -->
-                <div class="info-card">
-                    <div class="card-header">
-                        <i class="fas fa-user me-2"></i>Account Information
-                    </div>
-                    <div class="card-body">
-                        <div class="info-item">
-                            <div class="info-icon">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="info-label">Username:</div>
-                            <div class="info-value"><?= htmlspecialchars($currentUser['username']) ?></div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-icon">
-                                <i class="fas fa-envelope"></i>
-                            </div>
-                            <div class="info-label">Email:</div>
-                            <div class="info-value"><?= htmlspecialchars($currentUser['email']) ?></div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div class="info-label">Role:</div>
-                            <div class="info-value">
-                                <span class="badge bg-primary"><?= htmlspecialchars($currentUser['role']) ?></span>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-icon">
-                                <i class="fas fa-crown"></i>
-                            </div>
-                            <div class="info-label">Subscription:</div>
-                            <div class="info-value">
-                                <span class="badge bg-<?= $currentUser['subscription_status'] === 'active' ? 'success' : 'secondary' ?>">
-                                    <?= htmlspecialchars($currentUser['subscription_status']) ?>
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 pt-3 border-top">
-                            <a href="../feed/" class="btn-gradient me-3">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Feed
-                            </a>
-                            <a href="../auth/logout.php" class="btn btn-outline-secondary">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Crop Modal -->
-    <div class="modal fade crop-modal" id="cropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="cropModalLabel">
-                        <i class="fas fa-crop-alt me-2"></i>Crop Your Profile Picture
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="crop-container">
-                        <img id="cropperImage" style="max-width: 100%;">
-                    </div>
-                    
-                    <div class="crop-controls">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <label class="form-label mb-2">Preview:</label>
-                                <div class="crop-preview" id="cropPreview"></div>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <small class="text-muted d-block mb-2">Drag to move • Scroll to zoom</small>
-                                <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="rotateCropper(-90)">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="rotateCropper(90)">
-                                    <i class="fas fa-redo"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveCroppedImage()">
-                        <i class="fas fa-save me-2"></i>Save Avatar
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
-        let cropper = null;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('fileInput');
-            const uploadArea = document.getElementById('uploadArea');
-            const uploadForm = document.getElementById('uploadForm');
-            const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
-
-            // Show crop modal if image was uploaded
-            <?php if (isset($_SESSION['show_crop_modal']) && $_SESSION['show_crop_modal']): ?>
-                showCropModal('<?= $_SESSION['temp_image'] ?>');
-                <?php 
-                unset($_SESSION['show_crop_modal']);
-                unset($_SESSION['temp_image']);
-                ?>
-            <?php endif; ?>
-
-            // Click to upload
-            uploadArea.addEventListener('click', function() {
-                fileInput.click();
-            });
-
-            // Drag and drop functionality
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, unhighlight, false);
-            });
-
-            uploadArea.addEventListener('drop', handleDrop, false);
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            function highlight(e) {
-                uploadArea.classList.add('dragging');
-            }
-
-            function unhighlight(e) {
-                uploadArea.classList.remove('dragging');
-            }
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    handleFiles(files);
-                }
-            }
-
-            // File input change
-            fileInput.addEventListener('change', function() {
-                if (this.files.length > 0) {
-                    handleFiles(this.files);
-                }
-            });
-
-            function handleFiles(files) {
-                const file = files[0];
-                
-                // Basic validation
-                if (file.size > 10 * 1024 * 1024) {
-                    showAlert('File too large! Maximum size allowed is 10MB.', 'danger');
-                    fileInput.value = '';
-                    return;
-                }
-                
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-                if (!allowedTypes.includes(file.type)) {
-                    showAlert('Invalid file type! Please use JPG, PNG, or WebP format.', 'danger');
-                    fileInput.value = '';
-                    return;
-                }
-                
-                // Read file and show cropper
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
                 const reader = new FileReader();
+                
                 reader.onload = function(e) {
-                    showCropModal(e.target.result);
+                    document.getElementById('avatarPreview').src = e.target.result;
+                    document.getElementById('uploadBtn').style.display = 'inline-block';
                 };
-                reader.readAsDataURL(file);
+                
+                reader.readAsDataURL(input.files[0]);
             }
+        }
 
-            function showAlert(message, type) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-                alertDiv.innerHTML = `
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                
-                const container = document.querySelector('.profile-content');
-                const firstCard = container.querySelector('.info-card');
-                container.insertBefore(alertDiv, firstCard);
-                
-                setTimeout(() => {
-                    if (alertDiv.parentNode) {
-                        alertDiv.remove();
-                    }
-                }, 5000);
-            }
+        // Add some nice hover effects
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
         });
-
-        function showCropModal(imageSrc) {
-            const cropperImage = document.getElementById('cropperImage');
-            const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
-            
-            cropperImage.src = imageSrc;
-            cropModal.show();
-            
-            // Initialize cropper after modal is shown
-            document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
-                if (cropper) {
-                    cropper.destroy();
-                }
-                
-                cropper = new Cropper(cropperImage, {
-                    aspectRatio: 1,
-                    viewMode: 2,
-                    preview: '#cropPreview',
-                    background: false,
-                    autoCropArea: 0.8,
-                    responsive: true,
-                    restore: false,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: true,
-                    cropBoxResizable: true,
-                    toggleDragModeOnDblclick: false,
-                });
-            }, { once: true });
-            
-            // Clean up cropper when modal is hidden
-            document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-            });
-        }
-
-        function rotateCropper(degree) {
-            if (cropper) {
-                cropper.rotate(degree);
-            }
-        }
-
-        function saveCroppedImage() {
-            if (!cropper) {
-                return;
-            }
-            
-            // Get cropped canvas
-            const canvas = cropper.getCroppedCanvas({
-                width: 300,
-                height: 300,
-                imageSmoothingEnabled: true,
-                imageSmoothingQuality: 'high',
-            });
-            
-            // Convert to blob and submit
-            canvas.toBlob(function(blob) {
-                const reader = new FileReader();
-                reader.onload = function() {
-                    // Create form and submit cropped image
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.style.display = 'none';
-                    
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'cropped_image';
-                    input.value = reader.result;
-                    
-                    form.appendChild(input);
-                    document.body.appendChild(form);
-                    form.submit();
-                };
-                reader.readAsDataURL(blob);
-            }, 'image/jpeg', 0.9);
-        }
-
-        console.log('Profile page with crop functionality loaded');
     </script>
 </body>
 </html>
