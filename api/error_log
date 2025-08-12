@@ -1,0 +1,18 @@
+[02-Aug-2025 18:22:00 UTC] Checkout session error: Invalid API Key provided: sk_test_****************here
+[02-Aug-2025 23:30:42 UTC] Checkout session error: Invalid API Key provided: sk_test_****************here
+[04-Aug-2025 08:55:22 UTC] Comments API error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10'' at line 10
+[04-Aug-2025 08:59:12 UTC] Comments API called with: {"action":"load","post_id":1}
+[04-Aug-2025 08:59:17 UTC] Comments API called with: {"action":"load","post_id":1}
+[04-Aug-2025 08:59:20 UTC] Likes API called with: {"action":"toggle","post_id":1}
+[04-Aug-2025 08:59:22 UTC] Comments API called with: {"action":"create","post_id":1,"content":"This is a test comment created at 09:59:22"}
+[04-Aug-2025 10:22:31 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 10:22:31 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 17:48:19 UTC] Likes API called with: {"action":"toggle","post_id":"8"}
+[04-Aug-2025 17:48:30 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:03:59 UTC] Likes API called with: {"action":"toggle","post_id":"1"}
+[04-Aug-2025 18:04:02 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:04:09 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[04-Aug-2025 18:04:14 UTC] Likes API called with: {"action":"toggle","post_id":"7"}
+[08-Aug-2025 09:15:30 UTC] Likes API called with: {"action":"toggle","post_id":"8"}
+[08-Aug-2025 09:15:32 UTC] Likes API called with: {"action":"toggle","post_id":"8"}
+[11-Aug-2025 21:56:37 UTC] Likes API called with: {"action":"toggle","post_id":"2"}

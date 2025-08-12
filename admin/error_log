@@ -1,0 +1,52 @@
+[02-Aug-2025 09:43:51 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:43:52 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:43:53 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:43:59 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:44:05 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:44:58 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:46:57 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:46:58 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:46:59 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:46:59 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:47:05 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:47:06 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:48:16 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:10 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:22 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:22 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:23 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:28 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:31 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:37 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:38 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:38 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:39 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:42 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:49 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:50 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:50 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:50 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:50 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[02-Aug-2025 09:49:51 UTC] PHP Parse error:  syntax error, unexpected token ">" in /home/aurioni1/public_html/chloebelle.vip/admin/index.php on line 436
+[03-Aug-2025 20:38:26 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/admin/media.php:363
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(363): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(155): createSquareThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/admin/media.php on line 363
+[03-Aug-2025 20:39:19 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/admin/media.php:363
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(363): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(155): createSquareThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/admin/media.php on line 363
+[03-Aug-2025 20:39:41 UTC] PHP Fatal error:  Uncaught ValueError: imagejpeg(): Argument #3 ($quality) must be at between -1 and 100 in /home/aurioni1/public_html/chloebelle.vip/admin/media.php:363
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(363): imagejpeg()
+#1 /home/aurioni1/public_html/chloebelle.vip/admin/media.php(155): createSquareThumbnail()
+#2 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/admin/media.php on line 363
+[03-Aug-2025 20:42:23 UTC] PHP Deprecated:  Implicit conversion from float 121.2 to int loses precision in /home/aurioni1/public_html/chloebelle.vip/admin/media.php on line 471
+[03-Aug-2025 20:42:50 UTC] PHP Deprecated:  Implicit conversion from float 121.2 to int loses precision in /home/aurioni1/public_html/chloebelle.vip/admin/media.php on line 471
+[03-Aug-2025 20:46:49 UTC] createHighQualityThumbnail: quality parameter = 85
+[03-Aug-2025 20:46:50 UTC] About to save JPEG with quality: 85 (type: integer)

@@ -1,0 +1,60 @@
+[08-Aug-2025 09:11:42 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[08-Aug-2025 09:18:26 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[08-Aug-2025 09:25:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[08-Aug-2025 09:31:02 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[08-Aug-2025 09:31:04 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:09:45 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:30:03 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:36:39 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:38:02 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:38:07 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 21:58:09 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 22:43:26 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 23:05:16 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:572
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 572
+[11-Aug-2025 23:16:51 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:549
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 549
+[11-Aug-2025 23:17:24 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function getSetting() in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php:549
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/subscription/plans.php on line 549

@@ -1,0 +1,600 @@
+[01-Aug-2025 20:20:56 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:21:04 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:21:09 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:21:18 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:21:21 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:21:27 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:22:43 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:22:49 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:45:11 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:45:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:48:24 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:49:56 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:50:02 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:50:11 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[01-Aug-2025 20:51:48 UTC] Post created - ID: 10, User: 2, Content: Test
+[01-Aug-2025 20:51:49 UTC] Total posts in database: 10
+[01-Aug-2025 20:51:49 UTC] Posts retrieved: 10
+[01-Aug-2025 20:51:49 UTC] First post: Array
+(
+    [id] => 10
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:51:48
+    [updated_at] => 2025-08-01 21:51:48
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 20:53:19 UTC] Total posts in database: 10
+[01-Aug-2025 20:53:19 UTC] Posts retrieved: 10
+[01-Aug-2025 20:53:19 UTC] First post: Array
+(
+    [id] => 10
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:51:48
+    [updated_at] => 2025-08-01 21:51:48
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 20:55:53 UTC] Total posts in database: 8
+[01-Aug-2025 20:55:53 UTC] Posts retrieved: 8
+[01-Aug-2025 20:55:53 UTC] First post: Array
+(
+    [id] => 8
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:50:02
+    [updated_at] => 2025-08-01 21:50:02
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 20:58:44 UTC] Total posts in database: 8
+[01-Aug-2025 20:58:44 UTC] Posts retrieved: 8
+[01-Aug-2025 20:58:44 UTC] First post: Array
+(
+    [id] => 8
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:50:02
+    [updated_at] => 2025-08-01 21:50:02
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 20:59:13 UTC] Total posts in database: 8
+[01-Aug-2025 20:59:13 UTC] Posts retrieved: 8
+[01-Aug-2025 20:59:13 UTC] First post: Array
+(
+    [id] => 8
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:50:02
+    [updated_at] => 2025-08-01 21:50:02
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 21:00:42 UTC] Total posts in database: 8
+[01-Aug-2025 21:00:42 UTC] Posts retrieved: 8
+[01-Aug-2025 21:00:42 UTC] First post: Array
+(
+    [id] => 8
+    [user_id] => 2
+    [title] => Test
+    [content] => Test
+    [media_type] => none
+    [media_url] => 
+    [thumbnail_url] => 
+    [media_metadata] => 
+    [is_premium] => 0
+    [is_blurred] => 0
+    [subscription_required] => none
+    [one_time_price] => 
+    [currency] => GBP
+    [views] => 0
+    [likes] => 0
+    [comments_count] => 0
+    [status] => published
+    [scheduled_at] => 
+    [tags] => 
+    [seo_title] => 
+    [seo_description] => 
+    [featured] => 0
+    [featured_order] => 
+    [created_at] => 2025-08-01 21:50:02
+    [updated_at] => 2025-08-01 21:50:02
+    [username] => chloe_belle
+    [avatar] => 
+    [role] => chloe
+    [like_count] => 0
+    [user_liked] => 0
+)
+
+[01-Aug-2025 21:01:12 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1171
+[01-Aug-2025 21:01:13 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1171
+[01-Aug-2025 21:01:14 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1171
+[01-Aug-2025 21:02:08 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1171
+[01-Aug-2025 21:03:27 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1165
+[01-Aug-2025 21:03:28 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1165
+[01-Aug-2025 21:03:28 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1165
+[01-Aug-2025 21:03:28 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1165
+[01-Aug-2025 21:03:29 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1165
+[01-Aug-2025 21:03:57 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:03:58 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:03:59 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:04:03 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:07:28 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:07:29 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:07:30 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:07:31 UTC] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 5
+[01-Aug-2025 21:07:35 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[01-Aug-2025 21:07:35 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[01-Aug-2025 21:07:42 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[01-Aug-2025 21:07:52 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[01-Aug-2025 21:07:52 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[01-Aug-2025 21:07:52 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[02-Aug-2025 08:47:41 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[02-Aug-2025 08:47:46 UTC] PHP Parse error:  syntax error, unexpected token "endforeach" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1170
+[02-Aug-2025 08:59:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 1813
+[02-Aug-2025 16:53:59 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:54:09 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:54:32 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:55:05 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:56:47 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:56:50 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 16:56:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 17:54:56 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.is_deleted' in 'WHERE' in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:130
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/feed/index.php(130): PDOStatement->execute()
+#1 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 130
+[02-Aug-2025 17:55:01 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.is_deleted' in 'WHERE' in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:130
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/feed/index.php(130): PDOStatement->execute()
+#1 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 130
+[02-Aug-2025 17:55:02 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.is_deleted' in 'WHERE' in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:130
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/feed/index.php(130): PDOStatement->execute()
+#1 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 130
+[02-Aug-2025 17:57:18 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.is_deleted' in 'WHERE' in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:130
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/feed/index.php(130): PDOStatement->execute()
+#1 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 130
+[02-Aug-2025 17:57:32 UTC] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'c.is_deleted' in 'WHERE' in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:130
+Stack trace:
+#0 /home/aurioni1/public_html/chloebelle.vip/feed/index.php(130): PDOStatement->execute()
+#1 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 130
+[02-Aug-2025 23:16:28 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 23:16:29 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 23:16:31 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 23:16:35 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[02-Aug-2025 23:16:40 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[04-Aug-2025 08:41:06 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /home/aurioni1/public_html/chloebelle.vip/includes/functions.php on line 881
+[04-Aug-2025 08:41:06 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /home/aurioni1/public_html/chloebelle.vip/includes/functions.php on line 882
+[04-Aug-2025 08:41:06 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /home/aurioni1/public_html/chloebelle.vip/includes/functions.php on line 883
+[04-Aug-2025 08:41:06 UTC] PHP Warning:  ini_set(): Session ini settings cannot be changed when a session is active in /home/aurioni1/public_html/chloebelle.vip/includes/functions.php on line 884
+[04-Aug-2025 08:41:06 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:41:38 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:42:14 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:42:15 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:43:10 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:43:12 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:43:33 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:46:09 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:48:07 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:49:38 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:51:03 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:51:10 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:51:24 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[04-Aug-2025 08:51:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:51:58 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:52:55 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:52:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:52:58 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:52:59 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:53:00 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:53:04 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:53:51 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:54:17 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:56:40 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:58:34 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:58:35 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:58:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:58:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:59:42 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:59:44 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 08:59:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:10:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:11:06 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:14:12 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:14:50 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:08 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:12 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:13 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:13 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:14 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:20 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:22 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:30 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:35 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:17:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:18 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:19 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:20 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:23 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:56 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:18:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:19:26 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:19:27 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:19:28 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:19:29 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:32 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:45 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:35:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:55:43 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:55:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 09:56:04 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:43 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:45 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:05:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:09:59 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:00 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:10 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:10:11 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:10 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:11 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:12 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:12 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:13 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:11:45 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:14 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:12:15 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 16
+[04-Aug-2025 10:14:06 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:14:07 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:14:07 UTC] PHP Parse error:  syntax error, unexpected token "if" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 20
+[04-Aug-2025 10:17:19 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:17:24 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:17:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:18:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:19:53 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 10:21:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 14
+[04-Aug-2025 18:29:19 UTC] PHP Parse error:  syntax error, unexpected token "," in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 87
+[04-Aug-2025 18:29:20 UTC] PHP Parse error:  syntax error, unexpected token "," in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 87
+[04-Aug-2025 23:17:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:08 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:09 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2285
+[04-Aug-2025 23:17:56 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:57 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:17:58 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 2279
+[04-Aug-2025 23:26:03 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:03 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:04 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:04 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:05 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:06 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:07 UTC] PHP Warning:  Undefined variable $pdo in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[04-Aug-2025 23:26:07 UTC] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /home/aurioni1/public_html/chloebelle.vip/feed/index.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/feed/index.php on line 17
+[05-Aug-2025 08:35:58 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:36:03 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:36:04 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:36:05 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:36:37 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:37:31 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:37:34 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:37:38 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:38:20 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:45:01 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:45:20 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:45:37 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:45:51 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:47:22 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:47:25 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:47:32 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:50:36 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:50:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:51:00 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:51:03 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:53:03 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:53:12 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:53:18 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:12 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:13 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:14 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:15 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:18 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:19 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:19 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:20 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:48 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 08:57:52 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[05-Aug-2025 15:57:34 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[05-Aug-2025 16:20:49 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[05-Aug-2025 16:21:05 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:46:39 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:46:46 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:46:50 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:50:05 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:48 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:50 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:50 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:57 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:58 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:54:59 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:57:14 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 08:59:35 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 08:59:36 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 08:59:37 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 08:59:38 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 08:59:42 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 08:59:43 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:00:54 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:01:17 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:01:59 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:01:59 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:02:00 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:02:32 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:09:02 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:09:04 UTC] Feed query error: SQLSTATE[HY093]: Invalid parameter number: mixed named and positional parameters
+[08-Aug-2025 09:10:15 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 09:10:16 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[08-Aug-2025 09:10:17 UTC] Feed query error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 13
+[11-Aug-2025 21:16:09 UTC] Current user: Array
+(
+    [id] => 1
+    [username] => admin
+    [email] => admin@chloebelle.vip
+    [password] => $2y$12$S2NwkELI9ZoeBtYAxibem.EfELLQZOAq1uAahqu4N.BP8Ja9mA8EC
+    [first_name] => 
+    [last_name] => 
+    [avatar] => avatar_1_1754384817.jpg
+    [role] => admin
+    [status] => active
+    [email_verified] => 1
+    [email_verification_token] => 
+    [password_reset_token] => 
+    [password_reset_expires] => 
+    [last_login] => 2025-08-11 22:09:02
+    [login_attempts] => 0
+    [locked_until] => 
+    [subscription_status] => none
+    [subscription_expires] => 
+    [subscription_id] => 
+    [payment_customer_id] => 
+    [language] => en
+    [currency] => GBP
+    [timezone] => Europe/London
+    [notifications_enabled] => 1
+    [created_at] => 2025-08-01 21:07:20
+    [updated_at] => 2025-08-11 22:15:50
+    [stripe_customer_id] => 
+    [last_active] => 2025-08-11 22:15:50
+    [can_comment] => 1
+)
+
+[11-Aug-2025 21:16:09 UTC] Error fetching posts: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12
+[11-Aug-2025 21:16:51 UTC] Current user: Array
+(
+    [id] => 1
+    [username] => admin
+    [email] => admin@chloebelle.vip
+    [password] => $2y$12$S2NwkELI9ZoeBtYAxibem.EfELLQZOAq1uAahqu4N.BP8Ja9mA8EC
+    [first_name] => 
+    [last_name] => 
+    [avatar] => avatar_1_1754384817.jpg
+    [role] => admin
+    [status] => active
+    [email_verified] => 1
+    [email_verification_token] => 
+    [password_reset_token] => 
+    [password_reset_expires] => 
+    [last_login] => 2025-08-11 22:09:02
+    [login_attempts] => 0
+    [locked_until] => 
+    [subscription_status] => none
+    [subscription_expires] => 
+    [subscription_id] => 
+    [payment_customer_id] => 
+    [language] => en
+    [currency] => GBP
+    [timezone] => Europe/London
+    [notifications_enabled] => 1
+    [created_at] => 2025-08-01 21:07:20
+    [updated_at] => 2025-08-11 22:15:50
+    [stripe_customer_id] => 
+    [last_active] => 2025-08-11 22:15:50
+    [can_comment] => 1
+)
+
+[11-Aug-2025 21:16:51 UTC] Error fetching posts: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''10' OFFSET '0'' at line 12

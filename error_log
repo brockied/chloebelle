@@ -1,0 +1,197 @@
+[01-Aug-2025 19:20:35 UTC] PHP Warning:  include(installer/step1-requirements.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/install.php on line 577
+[01-Aug-2025 19:20:35 UTC] PHP Warning:  include(): Failed opening 'installer/step1-requirements.php' for inclusion (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/install.php on line 577
+[01-Aug-2025 19:26:34 UTC] Database setup error: SQLSTATE[28000] [1045] Access denied for user ' aurioni1_brockied'@'localhost' (using password: YES)
+[01-Aug-2025 19:26:45 UTC] Database setup error: SQLSTATE[28000] [1045] Access denied for user ' aurioni1_brockied'@'localhost' (using password: YES)
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: CREATE INDEX idx_posts_user_status ON posts(user_id, status)... | Error: SQLSTATE[42000]: Syntax error or access violation: 1061 Duplicate key name 'idx_posts_user_status'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: CREATE INDEX idx_posts_premium_featured ON posts(is_premium, featured)... | Error: SQLSTATE[42000]: Syntax error or access violation: 1061 Duplicate key name 'idx_posts_premium_featured'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: CREATE INDEX idx_comments_post_status ON comments(post_id, status)... | Error: SQLSTATE[42000]: Syntax error or access violation: 1061 Duplicate key name 'idx_comments_post_status'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: CREATE INDEX idx_subscriptions_user_status ON subscriptions(user_id, status)... | Error: SQLSTATE[42000]: Syntax error or access violation: 1061 Duplicate key name 'idx_subscriptions_user_status'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: CREATE INDEX idx_payments_user_status ON payments(user_id, status)... | Error: SQLSTATE[42000]: Syntax error or access violation: 1061 Duplicate key name 'idx_payments_user_status'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+CREATE TRIGGER update_post_comments_count_delete 
+AFTER DELETE ON comments 
+FOR EACH ROW
+... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+CREATE TRIGGER update_post_comments_count_delete 
+AFTER DELETE ON co...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+-- Trigger to update post likes count
+CREATE TRIGGER update_post_likes_count 
+AFTER INSERT... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+-- Trigger to update post likes count
+CREATE TRIGGER update_post_lik...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END IF... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+CREATE TRIGGER update_post_likes_count_delete 
+AFTER DELETE ON likes 
+FOR EACH ROW
+BEGIN... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+CREATE TRIGGER update_post_likes_count_delete 
+AFTER DELETE ON likes...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END IF... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+-- Trigger to update user subscription status
+CREATE TRIGGER update_user_subscription_statu... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+-- Trigger to update user subscription status
+CREATE TRIGGER update_...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+CREATE TRIGGER update_user_subscription_status_update 
+AFTER UPDATE ON subscriptions 
+FOR ... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+CREATE TRIGGER update_user_subscription_status_update 
+AFTER UPDATE ...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+DELIMITER... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+DELIMITER' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: DECLARE post_premium BOOLEAN DEFAULT FALSE... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DECLARE post_premium BOOLEAN DEFAULT FALSE' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: DECLARE post_subscription_required VARCHAR(20) DEFAULT 'none'... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DECLARE post_subscription_required VARCHAR(20) DEFAULT 'none'' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: DECLARE one_time_access BOOLEAN DEFAULT FALSE... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'DECLARE one_time_access BOOLEAN DEFAULT FALSE' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: SET access_type = 'free'... | Error: SQLSTATE[HY000]: General error: 1193 Unknown system variable 'access_type'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: ELSE
+        -- Check for one-time access
+        SELECT COUNT(*) > 0 INTO one_time_access
+      ... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'ELSE
+        -- Check for one-time access
+        SELECT COUNT(*) > 0 INTO ...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: IF one_time_access THEN
+            SET has_access = TRUE... | Error: SQLSTATE[42000]: Syntax error or access violation: 1327 Undeclared variable: one_time_access
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: SET access_type = 'one_time'... | Error: SQLSTATE[HY000]: General error: 1193 Unknown system variable 'access_type'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: ELSE
+            -- Check subscription access
+            SELECT COUNT(*) > 0 INTO subscription_ac... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'ELSE
+            -- Check subscription access
+            SELECT COUNT(*) >...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: IF subscription_active THEN
+                SET has_access = TRUE... | Error: SQLSTATE[42000]: Syntax error or access violation: 1327 Undeclared variable: subscription_active
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: SET access_type = 'subscription'... | Error: SQLSTATE[HY000]: General error: 1193 Unknown system variable 'access_type'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: ELSE
+                SET has_access = FALSE... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'ELSE
+                SET has_access = FALSE' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: SET access_type = 'none'... | Error: SQLSTATE[HY000]: General error: 1193 Unknown system variable 'access_type'
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END IF... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END IF... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END IF... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END IF' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+-- Procedure to increment post views
+CREATE PROCEDURE IncrementPostViews(IN post_id INT)
+B... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+-- Procedure to increment post views
+CREATE PROCEDURE IncrementPostV...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+-- Procedure to clean up expired tokens
+CREATE PROCEDURE CleanupExpiredTokens()
+BEGIN
+   ... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+-- Procedure to clean up expired tokens
+CREATE PROCEDURE CleanupExpi...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+-- Procedure to process subscription renewals
+CREATE PROCEDURE ProcessSubscriptionRenewals(... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+-- Procedure to process subscription renewals
+CREATE PROCEDURE Proce...' at line 1
+[01-Aug-2025 19:27:57 UTC] SQL Error in statement: END$
+
+DELIMITER... | Error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'END$
+
+DELIMITER' at line 1
+[03-Aug-2025 20:04:48 UTC] Homepage Debug: {"all_posts":9,"featured_posts_in_db":"3","published_posts":"9"}
+[03-Aug-2025 20:04:48 UTC] Featured Posts Found: 3
+[03-Aug-2025 20:04:55 UTC] Homepage Debug: {"all_posts":9,"featured_posts_in_db":"3","published_posts":"9"}
+[03-Aug-2025 20:04:55 UTC] Featured Posts Found: 3
+[03-Aug-2025 20:06:43 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:06:46 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:07:06 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1661
+[03-Aug-2025 20:09:06 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:07 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:09:08 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:19 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:21 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:10:32 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1599
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:26 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 20:11:27 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting "elseif" or "else" or "endif" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 1622
+[03-Aug-2025 21:10:14 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:14 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:16 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Warning:  require_once(settings.php): Failed to open stream: No such file or directory in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:10:17 UTC] PHP Fatal error:  Uncaught Error: Failed opening required 'settings.php' (include_path='.:/opt/alt/php84/usr/share/pear:/opt/alt/php84/usr/share/php:/usr/share/pear:/usr/share/php') in /home/aurioni1/public_html/chloebelle.vip/index.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/aurioni1/public_html/chloebelle.vip/index.php on line 3
+[03-Aug-2025 21:14:27 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:28 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:37 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:38 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[03-Aug-2025 21:14:38 UTC] PHP Fatal error:  Cannot redeclare function getFeaturedImages() (previously declared in /home/aurioni1/public_html/chloebelle.vip/index.php:32) in /home/aurioni1/public_html/chloebelle.vip/index.php on line 71
+[05-Aug-2025 16:08:01 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[05-Aug-2025 16:08:01 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[05-Aug-2025 16:08:01 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[05-Aug-2025 16:20:50 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[05-Aug-2025 16:20:50 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[05-Aug-2025 16:20:50 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[08-Aug-2025 09:00:44 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[08-Aug-2025 09:00:44 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[08-Aug-2025 09:00:44 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[08-Aug-2025 09:00:56 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[08-Aug-2025 09:00:56 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[08-Aug-2025 09:00:56 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[08-Aug-2025 09:13:49 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[08-Aug-2025 09:13:49 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[08-Aug-2025 09:13:49 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[08-Aug-2025 09:14:05 UTC] getFeaturedImages error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'aurioni1_chloebelle.media' doesn't exist
+[08-Aug-2025 09:14:05 UTC] getRecentPosts error: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ''6'' at line 6
+[08-Aug-2025 09:14:05 UTC] Homepage Debug: {"featured_images":1,"recent_posts":0}
+[11-Aug-2025 22:41:42 UTC] PHP Warning:  Undefined array key "id" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 48
+[11-Aug-2025 22:42:22 UTC] PHP Warning:  Undefined array key "id" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 48
+[12-Aug-2025 12:25:42 UTC] PHP Warning:  Undefined array key "id" in /home/aurioni1/public_html/chloebelle.vip/index.php on line 48
